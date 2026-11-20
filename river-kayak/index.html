@@ -476,26 +476,46 @@ function getEnv(){if(ENV)return ENV;const es=new THREE.Scene();const geo=new THR
   for(const[x,y,z,r]of[[5,7,3,1.6],[-6,4,-5,0.9]]){const m=new THREE.Mesh(new THREE.SphereGeometry(r,12,8),new THREE.MeshBasicMaterial({color:0xffffff}));m.position.set(x,y,z);es.add(m);}
   const pm=new THREE.PMREMGenerator(renderer);ENV=pm.fromScene(es,0.02).texture;pm.dispose();return ENV;}
 function plastic(color,opacity,extra){return new THREE.MeshPhysicalMaterial(Object.assign({color,roughness:0.16,metalness:0,clearcoat:1,clearcoatRoughness:0.06,envMap:getEnv(),envMapIntensity:1.2,transparent:opacity<1,opacity},extra||{}));}
-// cartoon water gun; nozzle points along local +z
+// gatling-style toy water gun (navy body, lime barrels and tank, orange drum, pump and gear ring); nozzle points along local +z
+const gunLabel=canvasTex(256,96,(g,w,h)=>{g.fillStyle='#1f2f6b';g.fillRect(0,0,w,h);const gr=g.createLinearGradient(0,0,w,0);gr.addColorStop(0,'#ff6a1a');gr.addColorStop(1,'#ffd23f');
+  g.fillStyle=gr;g.fillRect(8,8,w-16,h-16);g.fillStyle='#1f2f6b';g.font='bold italic 38px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('SUPER POWER',w/2,h/2+2);},false);
 function makeWaterGun(){const g=new THREE.Group();const parts=[];
-  const add=(m,delay)=>{m.userData.base=m.scale.clone();m.userData.delay=delay;m.scale.setScalar(0.0001);parts.push(m);g.add(m);return m;};
-  const bodyM=plastic(0xff7a1a,0.8);
-  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.25,1.1,18),bodyM);body.rotation.x=Math.PI/2;add(body,0);
-  const rear=new THREE.Mesh(new THREE.SphereGeometry(0.25,18,12),bodyM);rear.position.z=-0.55;add(rear,0.02);
-  const stripe=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.035,8,24),plastic(0xffffff,0.9));stripe.position.z=0.08;add(stripe,0.1);
-  const tank=new THREE.Mesh(new THREE.SphereGeometry(0.34,20,14),plastic(0x9cf07a,0.38,{roughness:0.05,depthWrite:false}));tank.scale.set(1,0.85,1.35);tank.position.set(0,0.42,-0.15);add(tank,0.08);
-  const water=new THREE.Mesh(new THREE.SphereGeometry(0.28,18,12,0,Math.PI*2,Math.PI*0.42,Math.PI*0.58),plastic(0x3fb8ff,0.6,{roughness:0.03,depthWrite:false}));water.scale.set(1,0.85,1.35);water.position.set(0,0.42,-0.15);add(water,0.12);
-  const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,0.13,14),plastic(0xff4f9a,0.9));cap.position.set(0,0.74,-0.2);add(cap,0.18);
-  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.14,0.55,16),plastic(0x2f7cf6,0.78));barrel.rotation.x=Math.PI/2;barrel.position.z=0.78;add(barrel,0.14);
-  const tip=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.045,10,18),plastic(0xffd23f,0.9));tip.position.z=1.06;add(tip,0.2);
-  const pump=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,0.38,16),plastic(0xffd23f,0.8));pump.rotation.x=Math.PI/2;pump.position.set(0,-0.18,0.38);add(pump,0.16);
-  for(const z of[0.28,0.38,0.48]){const r=new THREE.Mesh(new THREE.TorusGeometry(0.135,0.018,6,16),plastic(0xffb300,0.9));r.position.set(0,-0.18,z);add(r,0.2);}
-  const grip=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.46,0.21),bodyM);grip.position.set(0,-0.32,-0.3);grip.rotation.x=0.35;add(grip,0.06);
-  const trig=new THREE.Mesh(new THREE.TorusGeometry(0.09,0.03,8,12,Math.PI),plastic(0xff4f9a,0.9));trig.position.set(0,-0.2,-0.08);trig.rotation.set(0,Math.PI/2,Math.PI);add(trig,0.22);
-  const gold=new THREE.Mesh(new THREE.TorusGeometry(0.17,0.032,8,18),new THREE.MeshStandardMaterial({color:0xffcc33,metalness:0.9,roughness:0.12,envMap:getEnv()}));gold.position.z=0.55;add(gold,0.24);
-  for(const sd of[-1,1]){const fin=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.22,0.36),plastic(0x2f7cf6,0.75));fin.position.set(sd*0.24,0.08,-0.5);fin.rotation.z=sd*0.5;add(fin,0.26);}
-  const bubble=new THREE.Mesh(new THREE.SphereGeometry(0.8,28,18),plastic(0xdff6ff,0.3,{roughness:0.02,depthWrite:false,envMapIntensity:1.6}));bubble.visible=false;g.add(bubble);
-  g.userData={parts,bubble,water,pump};return g;}
+  const add=(m,delay,parent)=>{m.userData.base=m.scale.clone();m.userData.delay=delay;m.scale.setScalar(0.0001);parts.push(m);(parent||g).add(m);return m;};
+  const navy=plastic(0x1f2f6b,0.9),lime=plastic(0x9be22a,0.78),orange=plastic(0xff6a1a,0.88),red=plastic(0xe0262b,0.9);
+  const cylZ=(r1,r2,len,mat,seg=18)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,len,seg),mat);m.rotation.x=Math.PI/2;return m;};
+  // spinning barrel cluster + front drum
+  const spin=new THREE.Group();g.add(spin);
+  for(let k=0;k<6;k++){const an=k/6*Math.PI*2;const br=cylZ(0.058,0.058,0.58,lime,12);br.position.set(Math.cos(an)*0.135,Math.sin(an)*0.135,0.36);add(br,0.1+k*0.02,spin);}
+  const rod=cylZ(0.05,0.05,0.62,navy,10);rod.position.z=0.36;add(rod,0.08,spin);
+  const drum=cylZ(0.25,0.24,0.14,orange,20);drum.position.z=0.75;add(drum,0.2,spin);
+  for(let k=0;k<10;k++){const an=k/10*Math.PI*2;const bump=cylZ(0.05,0.05,0.14,orange,10);bump.position.set(Math.cos(an)*0.245,Math.sin(an)*0.245,0.75);add(bump,0.22,spin);}
+  const holeM=new THREE.MeshBasicMaterial({color:0x7a2a08});
+  for(let k=0;k<7;k++){const an=k/6*Math.PI*2,rr=k<6?0.14:0;const h=cylZ(0.035,0.035,0.02,holeM,10);h.position.set(Math.cos(an)*rr,Math.sin(an)*rr,0.825);add(h,0.24,spin);}
+  // collars, gear ring, receiver
+  const c1=cylZ(0.215,0.215,0.1,navy);c1.position.z=0.63;add(c1,0.06);
+  for(const sd of[-1,1]){const brk=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.08,0.55),navy);brk.position.set(sd*0.2,0.06,0.36);add(brk,0.12);}
+  const c2=cylZ(0.23,0.23,0.1,navy);c2.position.z=0.08;add(c2,0.04);
+  const gear=cylZ(0.2,0.2,0.08,orange,24);gear.position.z=-0.02;add(gear,0.14);
+  for(let k=0;k<14;k++){const an=k/14*Math.PI*2;const t=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.08),orange);t.position.set(Math.cos(an)*0.215,Math.sin(an)*0.215,-0.02);t.rotation.z=an;add(t,0.16);}
+  const rec=cylZ(0.18,0.2,0.38,navy);rec.position.z=-0.25;add(rec,0);
+  const belly=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.2,0.5),navy);belly.position.set(0,-0.13,-0.2);add(belly,0.02);
+  // carry handle on top
+  const handle=new THREE.Mesh(new THREE.TorusGeometry(0.21,0.035,8,18,Math.PI),navy);handle.rotation.y=Math.PI/2;handle.position.set(0,0.17,-0.17);add(handle,0.18);
+  // rear lime tank with water inside and a label
+  const tank=cylZ(0.17,0.19,0.6,plastic(0x9be22a,0.55,{depthWrite:false}),20);tank.position.z=-0.72;add(tank,0.06);
+  const tankEnd=new THREE.Mesh(new THREE.SphereGeometry(0.17,20,12,0,Math.PI*2,0,Math.PI/2),plastic(0x9be22a,0.55,{depthWrite:false}));tankEnd.rotation.x=-Math.PI/2;tankEnd.position.z=-1.02;add(tankEnd,0.1);
+  const water=cylZ(0.13,0.15,0.55,plastic(0x3fb8ff,0.6,{roughness:0.03,depthWrite:false}),16);water.position.set(0,-0.03,-0.72);water.scale.set(1,1,0.75);add(water,0.14);
+  for(const sd of[-1,1]){const lab=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.15),new THREE.MeshBasicMaterial({map:gunLabel}));lab.position.set(sd*0.185,0,-0.75);lab.rotation.y=sd*Math.PI/2;add(lab,0.26);}
+  // orange ribbed pump under the barrels
+  const pump=new THREE.Group();pump.position.set(0,-0.21,0.38);g.add(pump);
+  const pb=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.13,0.4),orange);add(pb,0.16,pump);
+  for(let k=0;k<5;k++){const rib=new THREE.Mesh(new THREE.BoxGeometry(0.15,0.03,0.025),orange);rib.position.set(0,-0.07,-0.12+k*0.06);add(rib,0.2,pump);}
+  // lime pistol grip, trigger + guard
+  const grip=new THREE.Mesh(new THREE.BoxGeometry(0.11,0.38,0.15),lime);grip.position.set(0,-0.38,-0.48);grip.rotation.x=-0.35;add(grip,0.08);
+  const trig=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.1,0.04),red);trig.position.set(0,-0.27,-0.3);add(trig,0.22);
+  const guard=new THREE.Mesh(new THREE.TorusGeometry(0.07,0.018,6,12,Math.PI),navy);guard.rotation.set(0,Math.PI/2,Math.PI);guard.position.set(0,-0.25,-0.32);add(guard,0.22);
+  const bubble=new THREE.Mesh(new THREE.SphereGeometry(0.85,28,18),plastic(0xdff6ff,0.3,{roughness:0.02,depthWrite:false,envMapIntensity:1.6}));bubble.visible=false;g.add(bubble);
+  g.userData={parts,bubble,water,pump,spin};return g;}
 // translucent jet of water
 let jetMat=null;
 const jetTex=canvasTex(128,32,(g,w,h)=>{g.fillStyle='rgba(200,240,255,0.55)';g.fillRect(0,0,w,h);for(let i=0;i<16;i++){g.fillStyle=`rgba(255,255,255,${0.35+Math.random()*0.5})`;const x=Math.random()*w,y=Math.random()*h,l=8+Math.random()*26,t=2+Math.random()*3;
@@ -516,9 +536,10 @@ function animGun(b,a,t){const g=b.gun,u=g.userData;
   const pk=clamp((a-0.13)/0.42,0,1);let sx=1,sy=1,sz=1,roll=0;
   if(a<0.65){const w=Math.sin(pk*Math.PI*3)*(1-pk);sz=1+0.55*w;sx=sy=1-0.35*w;roll=(1-elastic(pk))*Math.PI*2;}
   if(a>=0.45&&a<0.6)u.pump.position.z=0.38-Math.sin((a-0.45)/0.15*Math.PI*2)*0.13;else u.pump.position.z=0.38;
+  u.spin.rotation.z=a>=0.55?(a-0.55)*28:0;
   if(a>=0.6&&a<1.35){const r=Math.sin(a*70)*0.06;sz*=1-Math.abs(r);sx*=1+r*0.5;sy*=1+r*0.5;u.water.scale.y=u.water.userData.base.y*(0.75+0.3*Math.sin(a*45));}
   if(a>=1.35){const k=clamp((a-1.35)/0.25,0,1),bump=Math.sin(k*Math.PI);sx=sy=(1+0.7*bump)*(1-k);sz=(1-0.6*bump)*(1-k);}
-  const S=1.7;g.scale.set(S*sx+1e-4,S*sy+1e-4,S*sz+1e-4);
+  const S=1.55;g.scale.set(S*sx+1e-4,S*sy+1e-4,S*sz+1e-4);
   eF.set(0,Math.PI,roll);qF.setFromEuler(eF);
   if(a>=0.45&&t){g.quaternion.copy(qF);g.lookAt(gv.copy(t.mesh.position).add(gv2.set(0,1,0)));qA.copy(g.quaternion);g.quaternion.copy(qF).slerp(qA,clamp((a-0.45)/0.15,0,1));}else g.quaternion.copy(qF);}
 
@@ -839,7 +860,7 @@ function updateSkills(dt){
         for(let k=0;k<18;k++){const an=Math.random()*6.28;emitW(gp.x,gp.y,gp.z,Math.cos(an)*3,1+Math.random()*3,Math.sin(an)*3,0.5);}sfx('pop',P);}
       if(b.gunPhase<1&&a>=0.45){b.gunPhase=1;sfx('pump',P);}
       if(b.gunPhase<2&&a>=0.6){b.gunPhase=2;sfx(b.isPlayer?'sprayLong':'spray',P);}
-      if(a>=0.6&&a<1.35&&t){b.gun.updateMatrixWorld(true);const n=b.gun.localToWorld(jv0.set(0,0,1.12));const T=jv1.copy(t.mesh.position);T.y+=1;
+      if(a>=0.6&&a<1.35&&t){b.gun.updateMatrixWorld(true);const n=b.gun.localToWorld(jv0.set(0,0,0.86));const T=jv1.copy(t.mesh.position);T.y+=1;
         const frac=clamp((a-0.6)/0.12,0,1);const curve=updateJet(b,frac,n,T,a);
         for(let k=0;k<3;k++){const q=curve.getPoint(Math.random()*frac);emitW(q.x,q.y,q.z,(Math.random()-0.5)*2,Math.random()*1.5,(Math.random()-0.5)*2,0.45);}
         if(frac>=1)for(let k=0;k<5;k++)emitW(T.x,T.y,T.z,(Math.random()-0.5)*7,2+Math.random()*5,(Math.random()-0.5)*7,0.6);
