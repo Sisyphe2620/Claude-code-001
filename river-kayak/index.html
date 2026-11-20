@@ -1,4 +1,4 @@
-<title>激流皮艇大赛</title>
+<title>激流漂流大赛</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap">
@@ -34,8 +34,27 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 #map{width:128px;height:128px;display:block}
 #track{position:fixed;top:calc(20px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(36vw,360px);height:10px;border-radius:6px;background:rgba(5,34,42,.6);border:1px solid var(--panel-edge)}
 #track .flag{position:absolute;right:-6px;top:-7px;width:22px;height:22px;border-radius:4px;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/11px 11px;border:1px solid #fff}
-#track .dot{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;border:2px solid #fff;box-sizing:border-box}
-#track .dot.me{width:18px;height:18px;margin:-9px 0 0 -9px;z-index:2;box-shadow:0 0 0 3px rgba(255,122,26,.4)}
+#track .dot{position:absolute;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background-size:cover;background-position:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+#track .dot.me{width:32px;height:32px;margin:-16px 0 0 -16px;z-index:2}
+.roster-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.roster-head .hint{font-size:12px;color:var(--muted)}
+.roster{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.slot{background:none;border:0;padding:0;color:var(--text);font:inherit;cursor:pointer;display:grid;justify-items:center;gap:2px;min-width:0}
+.slot img{width:100%;max-width:64px;aspect-ratio:1;display:block;transition:transform .15s}
+.slot:hover img,.slot:focus-visible img{transform:scale(1.08) rotate(-4deg)}
+.slot span{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot.me span{color:var(--vest);font-weight:600}
+.slot:focus-visible{outline:3px solid var(--boost);outline-offset:3px;border-radius:8px}
+.ed-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+#cropC{width:200px;height:200px;border-radius:16px;touch-action:none;cursor:grab;flex:none;max-width:100%}
+.ed-side{display:grid;gap:8px;flex:1;min-width:180px}
+.ed-side label{font-size:12px;color:var(--muted);letter-spacing:.08em}
+#edName{font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid var(--panel-edge);background:rgba(255,255,255,.08);color:var(--text)}
+#edZoom{width:100%;accent-color:var(--vest)}
+.btn2{font:inherit;font-size:15px;padding:9px 12px;border-radius:10px;border:0;background:var(--boost);color:#032530;font-weight:600;cursor:pointer}
+.btn2.ghost{background:transparent;color:var(--muted);border:1px solid var(--panel-edge);font-weight:400}
+.btn2:focus-visible,#edName:focus-visible{outline:3px solid var(--vest);outline-offset:2px}
+.sub.small{font-size:12px}
 #itemBox{bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);padding:8px 14px;display:flex;align-items:center;gap:12px}
 #itemSlot{width:64px;height:64px;border-radius:12px;border:2px dashed var(--panel-edge);display:grid;place-items:center;font-family:var(--display);font-size:18px;text-align:center;line-height:1.1}
 #itemSlot.full{border:2px solid var(--boost);background:rgba(63,208,255,.18)}
@@ -46,8 +65,8 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 #msg{position:fixed;left:0;right:0;top:34%;text-align:center;font-family:var(--display);font-size:clamp(40px,10vw,96px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.35),0 0 30px rgba(63,208,255,.5);pointer-events:none;opacity:0;transition:opacity .2s}
 #msg.show{opacity:1}
 #msg.small{font-size:clamp(24px,5vw,44px)}
-.overlay{position:fixed;inset:0;display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(4,30,38,.25),rgba(4,30,38,.7));overflow:auto}
-.card{width:min(560px,100%);box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-edge);border-radius:20px;padding:28px 28px 24px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;gap:18px}
+.overlay{position:fixed;inset:0;display:flex;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(4,30,38,.25),rgba(4,30,38,.7));overflow:auto}
+.card{margin:auto;width:min(560px,100%);box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-edge);border-radius:20px;padding:28px 28px 24px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;gap:18px}
 .card h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(40px,9vw,64px);line-height:1;color:var(--text);text-wrap:balance}
 .card h1 em{font-style:normal;color:var(--vest)}
 .sub{margin:0;color:var(--muted);font-size:15px;line-height:1.6}
@@ -82,7 +101,10 @@ body.compact #time{font-size:18px}body.compact #map{width:84px;height:84px}
 body.compact #track{top:14px;width:34%}
 body.compact.touch #itemBox{bottom:10px;padding:6px 10px}
 body.compact #itemSlot{width:52px;height:52px;font-size:15px}
-body.compact .overlay{place-items:center;padding-block:10px}
+body.compact .overlay{padding-block:10px}
+body.compact .legend{display:none}
+body.compact .slot img{max-width:52px}
+body.compact #cropC{width:160px;height:160px}
 body.compact .card{padding:16px 20px;gap:10px;width:min(620px,100%)}
 body.compact .card h1{font-size:34px}
 body.compact .sub{font-size:13px;line-height:1.5}
@@ -126,8 +148,8 @@ body.rot #rotHint{display:block}
 
 <div id="menu" class="overlay">
   <div class="card">
-    <h1>激流<em>皮艇</em>大赛</h1>
-    <p class="sub">六条皮艇顺着峡谷河道一路冲下去，躲开礁石，抢道具，第一个冲过终点的拿冠军。</p>
+    <h1>激流<em>漂流</em>大赛</h1>
+    <p class="sub">六个漂流圈顺着峡谷河道一路冲下去，躲开礁石，抢道具，第一个冲过终点的拿冠军。</p>
     <div class="keys" id="keyHelp">
       <kbd>W / ↑</kbd><span>划桨前进</span>
       <kbd>A D / ← →</kbd><span>转向</span>
@@ -142,6 +164,8 @@ body.rot #rotHint{display:block}
       <span class="chip"><b>白色急流</b> 水流更快</span>
       <span class="chip"><b>礁石</b> 撞上会减速</span>
     </div>
+    <div class="roster-head"><span class="lab">选手头像</span><span class="hint">点头像换成相册里的照片</span></div>
+    <div class="roster" id="roster"></div>
     <button class="go" id="startBtn">开始比赛</button>
   </div>
 </div>
@@ -155,6 +179,25 @@ body.rot #rotHint{display:block}
   </div>
 </div>
 
+<div id="editor" class="overlay" hidden>
+  <div class="card ed">
+    <div class="lab" id="edTitle">编辑选手</div>
+    <div class="ed-row">
+      <canvas id="cropC" width="480" height="480" aria-label="头像裁剪区，拖动调整位置"></canvas>
+      <div class="ed-side">
+        <label for="edName">名字</label>
+        <input id="edName" maxlength="6" autocomplete="off">
+        <button class="btn2" id="edPick">从相册选照片</button>
+        <label for="edZoom">缩放</label>
+        <input type="range" id="edZoom" min="1" max="4" step="0.01" value="1">
+        <p class="sub small" id="edTip">拖动照片，把脸放进圆圈里。</p>
+        <button class="btn2 ghost" id="edReset">恢复默认头像</button>
+      </div>
+    </div>
+    <button class="go" id="edOk">完成</button>
+  </div>
+</div>
+<input type="file" id="filePick" accept="image/*" hidden>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -315,39 +358,112 @@ gate(uF,'终点  FINISH',true);
 // ---------- kayaks ----------
 function nameSprite(text,color){const tex=canvasTex(256,64,(g,w,h)=>{g.fillStyle='rgba(5,34,42,.7)';g.beginPath();g.roundRect?g.roundRect(4,8,w-8,h-16,22):g.rect(4,8,w-8,h-16);g.fill();
   g.fillStyle=color;g.beginPath();g.arc(34,h/2,10,0,7);g.fill();g.fillStyle='#fff';g.font='34px "ZCOOL KuaiLe",system-ui,sans-serif';g.textBaseline='middle';g.fillText(text,56,h/2+2);},false);
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthWrite:false}));sp.scale.set(3.2,0.8,1);sp.position.y=3;return sp;}
-function makeKayak(hullColor,vestColor,helmetColor){
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthWrite:false}));sp.scale.set(3.2,0.8,1);sp.position.y=3.6;return sp;}
+const skinMat=new THREE.MeshLambertMaterial({color:0xe9b48f});
+const strapMat=new THREE.MeshLambertMaterial({color:0x1d2326});
+const shortsMat=new THREE.MeshLambertMaterial({color:0x26324a});
+const trimMat=new THREE.MeshLambertMaterial({color:0xffffff});
+function limb(g,a,b,r,mat){const d=new THREE.Vector3().subVectors(b,a);const len=d.length();const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r*0.85,len,8),mat);m.position.copy(a).addScaledVector(d,0.5);m.quaternion.setFromUnitVectors(UP,d.normalize());g.add(m);return m;}
+// river tube: red outer ring, colored inner seat with backrest, rider reclined in a yellow life vest
+function makeTube(outerColor,innerColor,vestColor){
   const g=new THREE.Group();g.rotation.order='YXZ';
-  const hullMat=new THREE.MeshStandardMaterial({color:hullColor,roughness:0.35,metalness:0.05});
-  const hull=new THREE.Mesh(new THREE.SphereGeometry(1,18,10),hullMat);hull.scale.set(0.72,0.34,2.7);hull.position.y=0.12;g.add(hull);
-  const stripe=new THREE.Mesh(new THREE.SphereGeometry(1,18,10),new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.4}));stripe.scale.set(0.2,0.36,2.6);stripe.position.y=0.14;g.add(stripe);
-  const rim=new THREE.Mesh(new THREE.TorusGeometry(0.44,0.09,6,14),new THREE.MeshLambertMaterial({color:0x1d2326}));rim.rotation.x=Math.PI/2;rim.position.set(0,0.42,0.2);g.add(rim);
-  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.4,0.95,10),new THREE.MeshLambertMaterial({color:vestColor}));body.position.set(0,0.88,0.2);g.add(body);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(0.24,12,10),new THREE.MeshLambertMaterial({color:0xf0c7a0}));head.position.set(0,1.55,0.2);g.add(head);
-  const helm=new THREE.Mesh(new THREE.SphereGeometry(0.28,12,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshLambertMaterial({color:helmetColor}));helm.position.set(0,1.6,0.2);g.add(helm);
-  const paddle=new THREE.Group();paddle.position.set(0,1.12,-0.1);
-  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,3.1,6),new THREE.MeshLambertMaterial({color:0x2b2b2b}));shaft.rotation.z=Math.PI/2;paddle.add(shaft);
-  const bladeMat=new THREE.MeshLambertMaterial({color:helmetColor});
-  for(const sd of[-1,1]){const bl=new THREE.Mesh(new THREE.BoxGeometry(0.62,0.05,0.3),bladeMat);bl.position.x=sd*1.6;bl.rotation.x=sd*0.7;paddle.add(bl);}
+  const outer=new THREE.MeshStandardMaterial({color:outerColor,roughness:0.3,metalness:0.05});
+  const inner=new THREE.MeshStandardMaterial({color:innerColor,roughness:0.3,metalness:0.05});
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,0.5,14,32),outer);ring.rotation.x=Math.PI/2;ring.position.y=0.3;g.add(ring);
+  const trim=new THREE.Mesh(new THREE.TorusGeometry(1.25,0.055,6,48),trimMat);trim.rotation.x=Math.PI/2;trim.position.y=0.79;g.add(trim);
+  const floor=new THREE.Mesh(new THREE.CylinderGeometry(0.95,0.95,0.3,24),inner);floor.position.y=0.28;g.add(floor);
+  const bolster=new THREE.Mesh(new THREE.TorusGeometry(0.82,0.3,12,28),inner);bolster.rotation.x=Math.PI/2;bolster.position.y=0.78;g.add(bolster);
+  const back=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),inner);back.scale.set(0.95,0.72,0.36);back.position.set(0,1.1,0.98);back.rotation.x=-0.3;g.add(back);
+  for(const sd of[-1,1]){const arm=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),inner);arm.scale.set(0.28,0.3,0.75);arm.position.set(sd*0.95,0.95,0.2);g.add(arm);}
+  const handle=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.04,6,12),strapMat);handle.position.set(0,0.75,-1.7);handle.rotation.x=0.4;g.add(handle);
+  // rider
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(0.33,0.4,0.95,12),new THREE.MeshLambertMaterial({color:vestColor}));torso.position.set(0,1.18,0.5);torso.rotation.x=0.35;g.add(torso);
+  for(const y of[-0.18,0.18]){const st=new THREE.Mesh(new THREE.TorusGeometry(0.37,0.045,4,18),strapMat);st.rotation.x=Math.PI/2;st.position.y=y;st.scale.set(1.04,1.04,1);torso.add(st);}
+  const hips=new THREE.Mesh(new THREE.SphereGeometry(0.42,12,8),shortsMat);hips.scale.set(1,0.55,1);hips.position.set(0,0.78,0.25);g.add(hips);
+  for(const sd of[-1,1]){
+    const hip=new THREE.Vector3(sd*0.2,0.8,0.1),knee=new THREE.Vector3(sd*0.28,1.05,-0.8),foot=new THREE.Vector3(sd*0.34,0.9,-1.65);
+    limb(g,hip,knee,0.15,skinMat);limb(g,knee,foot,0.12,skinMat);
+    const f=new THREE.Mesh(new THREE.SphereGeometry(0.13,8,6),skinMat);f.scale.set(1,0.7,1.5);f.position.copy(foot);g.add(f);
+    limb(g,new THREE.Vector3(sd*0.38,1.5,0.62),new THREE.Vector3(sd*0.5,1.12,-0.15),0.09,skinMat);
+  }
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.25,8),skinMat);neck.position.set(0,1.7,0.66);g.add(neck);
+  const paddle=new THREE.Group();paddle.position.set(0,1.15,-0.2);
+  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,2.7,6),new THREE.MeshLambertMaterial({color:0x2b2b2b}));shaft.rotation.z=Math.PI/2;paddle.add(shaft);
+  const bladeMat=new THREE.MeshLambertMaterial({color:0x2f8cf0});
+  for(const sd of[-1,1]){const bl=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.05,0.28),bladeMat);bl.position.x=sd*1.4;bl.rotation.x=sd*0.7;paddle.add(bl);}
   g.add(paddle);
-  return{group:g,paddle};
+  const head=new THREE.Sprite(new THREE.SpriteMaterial({depthWrite:true,alphaTest:0.05}));head.scale.set(1.8,1.8,1);head.position.set(0,2.4,0.72);g.add(head);
+  return{group:g,paddle,head};
 }
 
+// ---------- sticker heads ----------
+function drawDefaultFace(g,r){const cx=128,cy=124;
+  g.fillStyle=r.css;g.fillRect(0,0,256,256);
+  g.fillStyle='#f1c19b';g.beginPath();g.ellipse(cx,cy+14,62,70,0,0,7);g.fill();
+  g.fillStyle=r.hair;g.beginPath();g.ellipse(cx,cy-30,70,46,0,Math.PI,0);g.fill();g.fillRect(cx-70,cy-32,18,40);g.fillRect(cx+52,cy-32,18,40);
+  g.fillStyle='#16191c';for(const sd of[-1,1]){g.beginPath();g.ellipse(cx+sd*26,cy+6,22,15,0,0,7);g.fill();}g.fillRect(cx-8,cy+2,16,5);
+  g.fillStyle='rgba(255,255,255,.55)';for(const sd of[-1,1]){g.beginPath();g.ellipse(cx+sd*26-8,cy,6,4,-0.5,0,7);g.fill();}
+  g.strokeStyle='#8a3b2b';g.lineWidth=6;g.lineCap='round';g.beginPath();g.arc(cx,cy+40,20,0.15*Math.PI,0.85*Math.PI);g.stroke();}
+function makeSticker(r){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');
+  g.save();g.shadowColor='rgba(0,0,0,.35)';g.shadowBlur=12;g.shadowOffsetY=5;g.fillStyle='#fff';g.beginPath();g.arc(128,124,116,0,7);g.fill();g.restore();
+  g.save();g.beginPath();g.arc(128,124,100,0,7);g.clip();
+  if(r.photo)g.drawImage(r.photo,28,24,200,200);else{g.translate(28,24);g.scale(200/256,200/256);drawDefaultFace(g,r);}
+  g.restore();return c;}
+
 const ROSTER=[
-  {name:'你',hull:0xff5a1f,vest:0xffd23f,helm:0xff5a1f,css:'#ff5a1f',player:true},
-  {name:'阿浪',hull:0x2f7cf6,vest:0xff7a1a,helm:0x2f7cf6,css:'#2f7cf6',skill:0.99},
-  {name:'小鱼',hull:0x22b573,vest:0xffd23f,helm:0x22b573,css:'#22b573',skill:0.96},
-  {name:'石头',hull:0xf2c018,vest:0xd63a3a,helm:0x333333,css:'#f2c018',skill:0.94},
-  {name:'飞燕',hull:0xb04fe0,vest:0xffd23f,helm:0xb04fe0,css:'#b04fe0',skill:0.97},
-  {name:'老船长',hull:0xe8445a,vest:0xffffff,helm:0xe8445a,css:'#e8445a',skill:0.92},
+  {name:'你',outer:0xe3262e,inner:0x2f7cf6,vest:0xffd23f,css:'#2f7cf6',hair:'#3a2618',player:true},
+  {name:'阿浪',outer:0xe3262e,inner:0x17a3a3,vest:0xffd23f,css:'#17a3a3',hair:'#1d1d1d',skill:0.99},
+  {name:'小鱼',outer:0xe3262e,inner:0x22b573,vest:0xff7a1a,css:'#22b573',hair:'#5a3a22',skill:0.96},
+  {name:'石头',outer:0x9aa3ab,inner:0xe3262e,vest:0xffd23f,css:'#9aa3ab',hair:'#1d1d1d',skill:0.94},
+  {name:'飞燕',outer:0xe3262e,inner:0xb04fe0,vest:0xffd23f,css:'#b04fe0',hair:'#c98a3a',skill:0.97},
+  {name:'老船长',outer:0x2f7cf6,inner:0xe3262e,vest:0xff7a1a,css:'#e8445a',hair:'#d8d8d8',skill:0.92},
 ];
-const racers=ROSTER.map((r,i)=>{const k=makeKayak(r.hull,r.vest,r.helm);if(!r.player)k.group.add(nameSprite(r.name,r.css));scene.add(k.group);
-  return{...r,idx:i,isPlayer:!!r.player,skill:r.skill||1,mesh:k.group,paddle:k.paddle,seed:i*1.7};});
+const racers=ROSTER.map((r,i)=>{const k=makeTube(r.outer,r.inner,r.vest);scene.add(k.group);
+  const o={...r,idx:i,defName:r.name,isPlayer:!!r.player,skill:r.skill||1,mesh:k.group,paddle:k.paddle,head:k.head,seed:i*1.7,photo:null,photoData:null};
+  if(!r.player){o.label=nameSprite(r.name,r.css);k.group.add(o.label);}return o;});
 const player=racers[0];
 
 // track dots
 const trackEl=document.getElementById('track');
-racers.slice().reverse().forEach(r=>{const d=document.createElement('div');d.className='dot'+(r.isPlayer?' me':'');d.style.background=r.css;trackEl.appendChild(d);r.dot=d;});
+racers.slice().reverse().forEach(r=>{const d=document.createElement('div');d.className='dot'+(r.isPlayer?' me':'');trackEl.appendChild(d);r.dot=d;});
+
+// ---------- roster + avatar editor ----------
+const rosterEl=document.getElementById('roster');
+racers.forEach(r=>{const b=document.createElement('button');b.className='slot'+(r.isPlayer?' me':'');b.type='button';b.innerHTML='<img alt=""><span></span>';b.addEventListener('click',()=>openEditor(r));rosterEl.appendChild(b);r.slot=b;});
+function refreshLook(r){const c=makeSticker(r);if(r.headTex)r.headTex.dispose();r.headTex=new THREE.CanvasTexture(c);r.head.material.map=r.headTex;r.head.material.needsUpdate=true;
+  const url=c.toDataURL('image/png');r.dot.style.backgroundImage=`url(${url})`;r.slot.querySelector('img').src=url;r.slot.querySelector('span').textContent=r.name;r.slot.setAttribute('aria-label','编辑选手 '+r.name);
+  if(r.label&&r.label.userData.name!==r.name){const old=r.label;r.label=nameSprite(r.name,r.css);r.label.userData.name=r.name;r.mesh.remove(old);old.material.map.dispose();r.mesh.add(r.label);}}
+const STORE='river-tube-avatars-v1';
+function saveStore(){try{const o={};racers.forEach(r=>{o[r.idx]={name:r.name,photo:r.photoData};});localStorage.setItem(STORE,JSON.stringify(o));}catch(_){}}
+function loadStore(){let o={};try{o=JSON.parse(localStorage.getItem(STORE)||'{}')||{};}catch(_){}
+  racers.forEach(r=>{const e=o[r.idx];if(r.label)r.label.userData.name=r.name;if(e){if(e.name)r.name=e.name;if(e.photo){const im=new Image();im.onload=()=>{r.photo=im;refreshLook(r);};im.src=e.photo;r.photoData=e.photo;}}refreshLook(r);});}
+
+const ed={el:document.getElementById('editor'),c:document.getElementById('cropC'),name:document.getElementById('edName'),zoom:document.getElementById('edZoom'),file:document.getElementById('filePick'),r:null,img:null,ox:0,oy:0};
+const ectx=ed.c.getContext('2d');
+function drawCrop(){const g=ectx;g.fillStyle='#0b2a33';g.fillRect(0,0,480,480);
+  if(ed.img){const iw=ed.img.naturalWidth||ed.img.width,ih=ed.img.naturalHeight||ed.img.height,sc=400/Math.min(iw,ih)*Number(ed.zoom.value);g.drawImage(ed.img,240+ed.ox-iw*sc/2,240+ed.oy-ih*sc/2,iw*sc,ih*sc);}
+  else{g.save();g.translate(40,40);g.scale(400/256,400/256);drawDefaultFace(g,ed.r);g.restore();}
+  g.save();g.fillStyle='rgba(4,24,30,.72)';g.beginPath();g.rect(0,0,480,480);g.arc(240,240,200,0,7,true);g.fill('evenodd');g.restore();
+  g.strokeStyle='#fff';g.lineWidth=14;g.beginPath();g.arc(240,240,207,0,7);g.stroke();}
+function openEditor(r){ed.r=r;ed.img=r.photo;ed.ox=ed.oy=0;ed.zoom.value=1;ed.name.value=r.name;document.getElementById('edTitle').textContent=r.isPlayer?'编辑你的头像':'编辑选手';
+  document.getElementById('edTip').textContent=r.photo?'拖动照片，把脸放进圆圈里。':'先从相册选一张照片。';drawCrop();ed.el.hidden=false;}
+document.getElementById('edPick').addEventListener('click',()=>{ed.file.value='';ed.file.click();});
+ed.file.addEventListener('change',()=>{const f=ed.file.files&&ed.file.files[0];if(!f)return;const url=URL.createObjectURL(f);const im=new Image();
+  im.onload=()=>{ed.img=im;ed.ox=ed.oy=0;ed.zoom.value=1;document.getElementById('edTip').textContent='拖动照片，把脸放进圆圈里。';drawCrop();};
+  im.onerror=()=>{document.getElementById('edTip').textContent='这张照片打不开，换一张试试（JPG 或 PNG）。';};im.src=url;});
+ed.zoom.addEventListener('input',drawCrop);
+ed.c.addEventListener('wheel',e=>{e.preventDefault();ed.zoom.value=clamp(Number(ed.zoom.value)*(e.deltaY<0?1.08:1/1.08),1,4);drawCrop();},{passive:false});
+{let drag=null;ed.c.addEventListener('pointerdown',e=>{if(!ed.img)return;drag={x:e.clientX,y:e.clientY};try{ed.c.setPointerCapture(e.pointerId)}catch(_){}});
+ ed.c.addEventListener('pointermove',e=>{if(!drag)return;const k=480/ed.c.getBoundingClientRect().width;let dx=(e.clientX-drag.x)*k,dy=(e.clientY-drag.y)*k;
+   if(document.body.classList.contains('rot')){const t=dx;dx=dy;dy=-t;}ed.ox+=dx;ed.oy+=dy;drag={x:e.clientX,y:e.clientY};drawCrop();});
+ const end=()=>{drag=null;};ed.c.addEventListener('pointerup',end);ed.c.addEventListener('pointercancel',end);}
+document.getElementById('edReset').addEventListener('click',()=>{ed.img=null;drawCrop();});
+document.getElementById('edOk').addEventListener('click',()=>{const r=ed.r;r.name=ed.name.value.trim().slice(0,6)||r.defName;
+  if(ed.img){const out=document.createElement('canvas');out.width=out.height=256;const g=out.getContext('2d');const k=256/400;g.scale(k,k);g.translate(-40,-40);
+    const iw=ed.img.naturalWidth||ed.img.width,ih=ed.img.naturalHeight||ed.img.height,sc=400/Math.min(iw,ih)*Number(ed.zoom.value);g.drawImage(ed.img,240+ed.ox-iw*sc/2,240+ed.oy-ih*sc/2,iw*sc,ih*sc);
+    r.photoData=out.toDataURL('image/jpeg',0.88);r.photo=out;}else{r.photo=null;r.photoData=null;}
+  refreshLook(r);saveStore();ed.el.hidden=true;document.getElementById('startBtn').focus();});
+loadStore();
 
 // ---------- particles ----------
 const PMAX=700,pPos=new Float32Array(PMAX*3),pCol=new Float32Array(PMAX*3),parts=[];
@@ -367,7 +483,7 @@ const keys={};
 const isTouch=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
 const touch={l:false,r:false,drift:false,brake:false};
 let itemPressed=false;
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
+addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT'){if(e.key==='Enter')document.getElementById('edOk').click();return;}if(!document.getElementById('editor').hidden)return;const k=e.key.toLowerCase();keys[k]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
   if(k===' '&&!e.repeat)itemPressed=true;if(k==='enter'&&state==='menu')startRace();});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
@@ -412,7 +528,7 @@ function aiControl(b,dt){
   let target=b.lane*(sa.hw-3);
   if(!b.item){for(const bx of boxes){if(bx.active&&bx.u>b.u+6&&bx.u<b.u+55&&Math.abs(bx.x-b.x)<9){target=bx.x;break;}}}
   for(const p of pads){if(p.u>b.u+6&&p.u<b.u+45&&Math.abs(p.x-target)<7&&Math.random()<0.5){target=p.x;break;}}
-  for(const r of rocks){const du=r.u-b.u;if(du<2||du>40)continue;if(Math.abs(r.x-target)<r.r+2.6){const lft=r.x-(r.r+3.2),rgt=r.x+(r.r+3.2);
+  for(const r of rocks){const du=r.u-b.u;if(du<2||du>40)continue;if(Math.abs(r.x-target)<r.r+3.2){const lft=r.x-(r.r+3.8),rgt=r.x+(r.r+3.8);
       const lOk=lft>-(sa.hw-2),rOk=rgt<sa.hw-2;target=(lOk&&(!rOk||Math.abs(lft-b.x)<Math.abs(rgt-b.x)))?lft:rgt;}}
   target=clamp(target,-(sa.hw-2.5),sa.hw-2.5);
   const hDes=clamp(Math.atan2(target-b.x,13),-0.85,0.85);
@@ -446,23 +562,23 @@ function physics(b,dt){
   b.x+=b.v*Math.sin(b.h)*dt;
   if(b.u>L-15){b.u=L-15;b.v*=0.9;}
   // banks
-  const lim=sp.hw-1.3;
+  const lim=sp.hw-1.9;
   if(Math.abs(b.x)>lim){const sd=Math.sign(b.x);const impact=Math.abs(b.v*Math.sin(b.h));b.x=sd*lim;if(Math.sign(b.h)===sd)b.h*=-0.35;b.v-=b.v*2.2*dt;
     if(b.isPlayer&&impact>6){shake=Math.max(shake,0.25);const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.4,s.wz,12,0.95,0.95,0.9,4);}}
   // rocks
-  for(const r of rocks){const du=b.u-r.u;if(du>6||du<-6)continue;const dx=b.x-r.x;const d=Math.hypot(du,dx)||0.01,m=r.r+0.95;
+  for(const r of rocks){const du=b.u-r.u;if(du>6||du<-6)continue;const dx=b.x-r.x;const d=Math.hypot(du,dx)||0.01,m=r.r+1.55;
     if(d<m){b.u=r.u+du/d*m;b.x=r.x+dx/d*m;if(b.v>5){const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.5,s.wz,24,0.95,0.98,1,6);b.v*=0.35;b.stunT=0.55;b.spin=0.6;b.drift.on=false;
       if(b.isPlayer){shake=0.45;say('撞礁石！',0.7,true);}}b.h+=dx/d*0.5;}}
   // boxes
-  for(const bx of boxes){if(!bx.active)continue;if(Math.abs(b.u-bx.u)<2.1&&Math.abs(b.x-bx.x)<2.1){bx.active=false;bx.mesh.visible=false;bx.t=5;
+  for(const bx of boxes){if(!bx.active)continue;if(Math.abs(b.u-bx.u)<2.5&&Math.abs(b.x-bx.x)<2.5){bx.active=false;bx.mesh.visible=false;bx.t=5;
     burst(bx.mesh.position.x,bx.mesh.position.y,bx.mesh.position.z,20,1,0.8,0.3,4);if(!b.item)giveItem(b,b.place||0);}}
   // pads
   for(const p of pads){if(Math.abs(b.u-p.u)<4.4&&Math.abs(b.x-p.x)<2.5){if(b.boostT<0.9){b.boostT=0.9;b.boostTier=1;}}}
   // finish
   if(b.finishTime==null&&b.u>=uF){b.finishTime=raceTime;if(b.isPlayer)onPlayerFinish();}
 }
-function boatCollisions(){for(let i=0;i<racers.length;i++)for(let j=i+1;j<racers.length;j++){const a=racers[i],b=racers[j];const du=a.u-b.u,dx=a.x-b.x;if(Math.abs(du)>3.5)continue;
-  const d=Math.hypot(du*0.7,dx)||0.01;if(d<1.8){const push=(1.8-d)/2;const nu=du*0.7/d,nx=dx/d;a.u+=nu*push;b.u-=nu*push;a.x+=nx*push;b.x-=nx*push;const av=(a.v+b.v)/2;a.v=lerp(a.v,av,0.3);b.v=lerp(b.v,av,0.3);}}}
+function boatCollisions(){for(let i=0;i<racers.length;i++)for(let j=i+1;j<racers.length;j++){const a=racers[i],b=racers[j];const du=a.u-b.u,dx=a.x-b.x;if(Math.abs(du)>4)continue;
+  const d=Math.hypot(du,dx)||0.01;if(d<3.1){const push=(3.1-d)/2;const nu=du/d,nx=dx/d;a.u+=nu*push;b.u-=nu*push;a.x+=nx*push;b.x-=nx*push;const av=(a.v+b.v)/2;a.v=lerp(a.v,av,0.3);b.v=lerp(b.v,av,0.3);}}}
 
 // ---------- visuals per racer ----------
 const sv={};
@@ -474,7 +590,7 @@ function updateMesh(b,dt){
   const c=Math.cos(b.h),s=Math.sin(b.h);b.dirx=sv.tx*c+rx*s;b.dirz=sv.tz*c+rz*s;b.rx=rx;b.rz=rz;b.wy=sv.y;
   b.visDrift=lerp(b.visDrift,b.drift.on?b.drift.dir*0.42:0,1-Math.exp(-8*dt));
   b.roll=lerp(b.roll,-b.steer*0.14-(b.drift.on?b.drift.dir*0.12:0),1-Math.exp(-6*dt));
-  b.mesh.rotation.set(Math.sin(time*2.2+b.seed)*0.03*(1+sv.rf*3),Math.atan2(-b.dirx,-b.dirz)-b.visDrift+b.spin*Math.PI*2,b.roll+Math.sin(time*1.7+b.seed)*0.03);
+  b.mesh.rotation.set(Math.sin(time*2.2+b.seed)*0.03*(1+sv.rf*3),Math.atan2(-b.dirx,-b.dirz)-b.visDrift+b.spin*Math.PI*2+Math.sin(time*0.9+b.seed)*0.1,b.roll+Math.sin(time*1.7+b.seed)*0.03);
   const stroke=state==='race'||state==='finished'?Math.max(0.25,b.throttle):0.15;
   b.phase+=dt*(3.2+Math.max(0,b.v)*0.16)*stroke;
   b.paddle.rotation.z=Math.sin(b.phase)*0.55;b.paddle.rotation.y=Math.cos(b.phase)*0.4;
