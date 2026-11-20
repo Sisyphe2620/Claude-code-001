@@ -362,12 +362,13 @@ scene.add(bankRocks);
 
 // ---------- river obstacles ----------
 const rocks=[];
+const ROCK_GAP=4.8,ROCK_BANK_GAP=5.2; // tube needs ~3.1 of clear water to pass; smaller gaps are never generated
 {const geo=new THREE.DodecahedronGeometry(1,0),mat=new THREE.MeshLambertMaterial({color:0x7d7a72,flatShading:true});
  const ringGeo=new THREE.RingGeometry(1,1.6,20);ringGeo.rotateX(-Math.PI/2);const ringMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.45,depthWrite:false});
  const s={};let u=170;
  while(u<uF-50){sample(u,s);const n=s.rf>0.3?2+(rand()<.5?1:0):(rand()<.35?2:1);
-   for(let k=0;k<n;k++){const r=1.1+rand()*1.3,x=(rand()*2-1)*(s.hw-3.5),uu=u+(rand()-0.5)*8;
-     if(rocks.some(o=>Math.abs(o.u-uu)<6&&Math.abs(o.x-x)<o.r+r+4))continue;
+   for(let k=0;k<n;k++){const r=1.1+rand()*1.3,uu=u+(rand()-0.5)*8,hwA=Math.min(s.hw,HW[Math.min(N,Math.round(uu/L*N))]),x=(rand()*2-1)*Math.max(0,hwA-r-ROCK_BANK_GAP);
+     if(rocks.some(o=>Math.hypot(o.u-uu,o.x-x)<o.r+r+ROCK_GAP))continue;
      toWorld(uu,x,s);const m=new THREE.Mesh(geo,mat);m.scale.set(r,r*0.75,r);m.rotation.set(rand(),rand()*6,rand());m.position.set(s.wx,s.y+0.15,s.wz);scene.add(m);
      const ring=new THREE.Mesh(ringGeo,ringMat);ring.scale.set(r,1,r);ring.position.set(s.wx,s.y+0.06,s.wz);scene.add(ring);
      rocks.push({u:uu,x,r,ring,base:r});}
@@ -809,7 +810,7 @@ function resetRace(){
   const order=[1,2,3,4,5,0];
   order.forEach((ri,gi)=>{const r=racers[ri];const row=Math.floor(gi/3),col=gi%3;
     Object.assign(r,{u:uStart-row*7,x:[-6,0,6][col],h:0,v:0,boostT:0,boostTier:0,stunT:0,spin:0,item:null,drift:{on:false,dir:0,charge:0},finishTime:null,
-      steer:0,throttle:0,visDrift:0,roll:0,phase:Math.random()*6,lane:[-0.45,0,0.45][col],laneT:1+Math.random()*2,itemHold:0,rubber:1,cans:0,skillHold:0,scareT:0,capT:0,flip:0,gunActive:false,gunAge:0});
+      steer:0,throttle:0,visDrift:0,roll:0,phase:Math.random()*6,lane:[-0.45,0,0.45][col],laneT:1+Math.random()*2,itemHold:0,rubber:1,cans:0,skillHold:0,scareT:0,capT:0,flip:0,gunActive:false,gunAge:0,hopT:0,stuckClock:0,stuckCount:0,checkU:uStart-row*7});
     if(r.turtle){r.mesh.remove(r.turtle);r.turtle=null;}if(r.gun)r.gun.visible=false;if(r.jet)r.jet.visible=false;});
   for(const b of boxes){b.active=true;b.mesh.visible=true;}
   for(const c of cans){c.active=true;c.mesh.visible=true;}
@@ -894,8 +895,20 @@ function aiControl(b,dt){
 
 // ---------- physics ----------
 const sp={};
+function findClearX(u,prefer){const s={};sample(u,s);const lim=s.hw-2.5;let best=prefer,bestScore=-1e9;
+  for(let x=-lim;x<=lim;x+=0.5){let clear=99;for(const r of rocks){const du=Math.abs(r.u-u);if(du>10)continue;clear=Math.min(clear,Math.hypot(du,r.x-x)-r.r);}
+    const score=Math.min(clear,6)*3-Math.abs(x-prefer)*0.3;if(score>bestScore){bestScore=score;best=x;}}return best;}
+function rescue(b){const u1=Math.min(b.u+9,L-20);b.hopU0=b.u;b.hopX0=b.x;b.hopU1=u1;b.hopX1=findClearX(u1,b.x);b.hopT=HOP;b.h=0;b.drift.on=false;b.stunT=0;
+  const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.6,s.wz,22,0.9,0.97,1,5);sfx('pop',b.isPlayer?null:b.mesh.position);if(b.isPlayer)say('脱困！',0.8,true);}
+const HOP=0.6;
 function physics(b,dt){
   sample(b.u,sp);
+  if(b.hopT>0){b.hopT-=dt;const k=clamp(1-b.hopT/HOP,0,1),e=k*k*(3-2*k);b.u=lerp(b.hopU0,b.hopU1,e);b.x=lerp(b.hopX0,b.hopX1,e);
+    if(b.hopT<=0){b.v=Math.max(b.v,12);b.stuckClock=0;b.checkU=b.u;b.stuckCount=0;const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.4,s.wz,26,0.9,0.97,1,6);sfx('splashBig',b.isPlayer?null:b.mesh.position,0.6);}
+    return;}
+  // stuck check: under 4 m of progress in each of two consecutive seconds while racing
+  if(state==='race'&&b.finishTime==null&&b.capT<=0){b.stuckClock=(b.stuckClock||0)+dt;if(b.stuckClock>=1){b.stuckClock=0;b.stuckCount=(b.u-(b.checkU??b.u)<4)?(b.stuckCount||0)+1:0;b.checkU=b.u;if(b.stuckCount>=2){b.stuckCount=0;rescue(b);return;}}}
+  else{b.stuckClock=0;b.stuckCount=0;b.checkU=b.u;}
   if(b.capT>0){b.capT-=dt;b.drift.on=false;b.drift.charge=0;b.v=lerp(b.v,0,1-Math.exp(-5*dt));b.h*=1-dt;b.u+=sp.cur*0.45*dt;
     const lim=sp.hw-1.9;b.x=clamp(b.x,-lim,lim);if(b.finishTime==null&&b.u>=uF){b.finishTime=raceTime;if(b.isPlayer)onPlayerFinish();}return;}
   const scared=b.scareT>0;if(scared)b.scareT-=dt;
@@ -958,6 +971,7 @@ function updateMesh(b,dt){
   const sk=Math.min(1,b.scareT);
   b.mesh.rotation.set(Math.sin(time*2.2+b.seed)*0.03*(1+sv.rf*3)+Math.sin(time*11+b.seed)*0.22*sk,Math.atan2(-b.dirx,-b.dirz)-b.visDrift+b.spin*Math.PI*2+Math.sin(time*0.9+b.seed)*0.1+Math.sin(time*7+b.seed)*0.35*sk,b.roll+Math.sin(time*1.7+b.seed)*0.03+Math.sin(time*14+b.seed)*0.38*sk+b.flip);
   if(b.flip>0.3)b.mesh.position.y+=0.25;
+  if(b.hopT>0){const k=clamp(1-b.hopT/HOP,0,1);b.mesh.position.y+=Math.sin(Math.PI*k)*3.2;b.mesh.rotation.y+=k*Math.PI*2;}
   if(b.capT>0&&Math.random()<dt*20)emit(px+(Math.random()-0.5)*2.5,sv.y+0.3,pz+(Math.random()-0.5)*2.5,0,2+Math.random()*2,0,1,1,1,0.5);
   const stroke=state==='race'||state==='finished'?Math.max(0.25,b.throttle):0.15;
   b.phase+=dt*(3.2+Math.max(0,b.v)*0.16)*stroke;
@@ -1093,6 +1107,6 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-window.__game={racers,get state(){return state},startRace,L,uF};
+window.__game={racers,rocks,HW,N,get state(){return state},startRace,L,uF};
 })();
 </script>
