@@ -55,6 +55,12 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 .btn2.ghost{background:transparent;color:var(--muted);border:1px solid var(--panel-edge);font-weight:400}
 .btn2:focus-visible,#edName:focus-visible{outline:3px solid var(--vest);outline-offset:2px}
 .sub.small{font-size:12px}
+.btn2.small{font-size:12px;padding:5px 10px}
+.slot{position:relative}
+.slot::after{content:"换";position:absolute;top:0;right:calc(50% - 34px);font-size:11px;line-height:1;padding:3px 5px;border-radius:999px;background:var(--vest);color:#2a0d00;font-weight:600}
+.ed-nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#edCount{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+body.compact .slot::after{right:calc(50% - 28px)}
 #itemBox{bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);padding:8px 14px;display:flex;align-items:center;gap:12px}
 #itemSlot{width:64px;height:64px;border-radius:12px;border:2px dashed var(--panel-edge);display:grid;place-items:center;font-family:var(--display);font-size:18px;text-align:center;line-height:1.1}
 #itemSlot.full{border:2px solid var(--boost);background:rgba(63,208,255,.18)}
@@ -164,8 +170,9 @@ body.rot #rotHint{display:block}
       <span class="chip"><b>白色急流</b> 水流更快</span>
       <span class="chip"><b>礁石</b> 撞上会减速</span>
     </div>
-    <div class="roster-head"><span class="lab">选手头像</span><span class="hint">点头像换成相册里的照片</span></div>
+    <div class="roster-head"><span class="lab">全部 6 位选手（点头像改照片和名字）</span><button class="btn2 ghost small" id="bulkPick">一次选多张照片</button></div>
     <div class="roster" id="roster"></div>
+    <p class="sub small" id="bulkMsg" hidden></p>
     <button class="go" id="startBtn">开始比赛</button>
   </div>
 </div>
@@ -194,10 +201,12 @@ body.rot #rotHint{display:block}
         <button class="btn2 ghost" id="edReset">恢复默认头像</button>
       </div>
     </div>
+    <div class="ed-nav"><button class="btn2 ghost" id="edPrev">‹ 上一位</button><span id="edCount"></span><button class="btn2 ghost" id="edNext">下一位 ›</button></div>
     <button class="go" id="edOk">完成</button>
   </div>
 </div>
 <input type="file" id="filePick" accept="image/*" hidden>
+<input type="file" id="bulkFile" accept="image/*" multiple hidden>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -445,7 +454,7 @@ function drawCrop(){const g=ectx;g.fillStyle='#0b2a33';g.fillRect(0,0,480,480);
   else{g.save();g.translate(40,40);g.scale(400/256,400/256);drawDefaultFace(g,ed.r);g.restore();}
   g.save();g.fillStyle='rgba(4,24,30,.72)';g.beginPath();g.rect(0,0,480,480);g.arc(240,240,200,0,7,true);g.fill('evenodd');g.restore();
   g.strokeStyle='#fff';g.lineWidth=14;g.beginPath();g.arc(240,240,207,0,7);g.stroke();}
-function openEditor(r){ed.r=r;ed.img=r.photo;ed.ox=ed.oy=0;ed.zoom.value=1;ed.name.value=r.name;document.getElementById('edTitle').textContent=r.isPlayer?'编辑你的头像':'编辑选手';
+function openEditor(r){ed.r=r;ed.img=r.photo;ed.ox=ed.oy=0;ed.zoom.value=1;ed.name.value=r.name;document.getElementById('edTitle').textContent=r.isPlayer?'你自己（玩家）':'电脑对手';document.getElementById('edCount').textContent=`第 ${r.idx+1} / ${racers.length} 位`;
   document.getElementById('edTip').textContent=r.photo?'拖动照片，把脸放进圆圈里。':'先从相册选一张照片。';drawCrop();ed.el.hidden=false;}
 document.getElementById('edPick').addEventListener('click',()=>{ed.file.value='';ed.file.click();});
 ed.file.addEventListener('change',()=>{const f=ed.file.files&&ed.file.files[0];if(!f)return;const url=URL.createObjectURL(f);const im=new Image();
@@ -458,11 +467,22 @@ ed.c.addEventListener('wheel',e=>{e.preventDefault();ed.zoom.value=clamp(Number(
    if(document.body.classList.contains('rot')){const t=dx;dx=dy;dy=-t;}ed.ox+=dx;ed.oy+=dy;drag={x:e.clientX,y:e.clientY};drawCrop();});
  const end=()=>{drag=null;};ed.c.addEventListener('pointerup',end);ed.c.addEventListener('pointercancel',end);}
 document.getElementById('edReset').addEventListener('click',()=>{ed.img=null;drawCrop();});
-document.getElementById('edOk').addEventListener('click',()=>{const r=ed.r;r.name=ed.name.value.trim().slice(0,6)||r.defName;
-  if(ed.img){const out=document.createElement('canvas');out.width=out.height=256;const g=out.getContext('2d');const k=256/400;g.scale(k,k);g.translate(-40,-40);
-    const iw=ed.img.naturalWidth||ed.img.width,ih=ed.img.naturalHeight||ed.img.height,sc=400/Math.min(iw,ih)*Number(ed.zoom.value);g.drawImage(ed.img,240+ed.ox-iw*sc/2,240+ed.oy-ih*sc/2,iw*sc,ih*sc);
-    r.photoData=out.toDataURL('image/jpeg',0.88);r.photo=out;}else{r.photo=null;r.photoData=null;}
-  refreshLook(r);saveStore();ed.el.hidden=true;document.getElementById('startBtn').focus();});
+function cropTo256(img,ox,oy,zoom){const out=document.createElement('canvas');out.width=out.height=256;const g=out.getContext('2d');const k=256/400;g.scale(k,k);g.translate(-40,-40);
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height,sc=400/Math.min(iw,ih)*zoom;g.drawImage(img,240+ox-iw*sc/2,240+oy-ih*sc/2,iw*sc,ih*sc);return out;}
+function commitEditor(){const r=ed.r;r.name=ed.name.value.trim().slice(0,6)||r.defName;
+  if(ed.img){const out=cropTo256(ed.img,ed.ox,ed.oy,Number(ed.zoom.value));r.photoData=out.toDataURL('image/jpeg',0.88);r.photo=out;}else{r.photo=null;r.photoData=null;}
+  refreshLook(r);saveStore();}
+document.getElementById('edOk').addEventListener('click',()=>{commitEditor();ed.el.hidden=true;document.getElementById('startBtn').focus();});
+document.getElementById('edPrev').addEventListener('click',()=>{commitEditor();openEditor(racers[(ed.r.idx+racers.length-1)%racers.length]);});
+document.getElementById('edNext').addEventListener('click',()=>{commitEditor();openEditor(racers[(ed.r.idx+1)%racers.length]);});
+// bulk: pick several photos at once, assigned in order starting from you
+const bulkFile=document.getElementById('bulkFile'),bulkMsg=document.getElementById('bulkMsg');
+document.getElementById('bulkPick').addEventListener('click',()=>{bulkFile.value='';bulkFile.click();});
+bulkFile.addEventListener('change',()=>{const files=[...(bulkFile.files||[])].slice(0,racers.length);if(!files.length)return;let done=0,bad=0;
+  files.forEach((f,i)=>{const im=new Image();const fin=()=>{done++;if(done===files.length){saveStore();bulkMsg.hidden=false;
+      bulkMsg.textContent=`已按顺序换好 ${files.length-bad} 位选手的头像${bad?`，${bad} 张打不开`:''}。点头像可以再调整位置和改名字。`;}};
+    im.onload=()=>{const r=racers[i];const out=cropTo256(im,0,0,1);r.photo=out;r.photoData=out.toDataURL('image/jpeg',0.88);refreshLook(r);fin();};
+    im.onerror=()=>{bad++;fin();};im.src=URL.createObjectURL(f);});});
 loadStore();
 
 // ---------- particles ----------
