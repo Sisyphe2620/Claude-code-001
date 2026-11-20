@@ -141,6 +141,15 @@ body.compact #tR{left:calc(max(16px,env(safe-area-inset-left,0px)) + 92px)}
 body.compact #tBrake{bottom:108px}
 body.compact #tTurtle{right:calc(max(16px,env(safe-area-inset-right,0px)) + 92px);bottom:20px}
 body.compact #tGun{bottom:20px}
+#tJump{right:max(16px,env(safe-area-inset-right,0px));bottom:calc(108px + env(safe-area-inset-bottom,0px));width:84px!important;height:84px!important;font-size:17px;line-height:1.05;text-align:center;--c:0}
+#tJump::before{content:"";position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(var(--boost) calc(var(--c)*360deg),rgba(255,255,255,.12) 0);-webkit-mask:radial-gradient(circle,transparent 61%,#000 63%);mask:radial-gradient(circle,transparent 61%,#000 63%)}
+#tJump.full{background:rgba(255,122,26,.5);border-color:var(--vest)}
+#tJump.full::before{background:var(--vest)}
+body.compact #tJump{bottom:110px}
+.jumpk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+#jumpBar{width:70px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;display:block}
+#jumpBar b{display:block;height:100%;width:0;background:var(--boost)}
+body.touch .jumpk{display:none}
 @media (prefers-reduced-motion:reduce){#touch .tbtn.skill.ready,.sk.ready{animation:none}}
 #rotHint{display:none}
 body.rot #rotHint{display:block}
@@ -159,7 +168,7 @@ body.rot #rotHint{display:block}
   <div class="hud-box tr"><div class="trrow"><button id="muteBtn" class="mute" type="button" aria-label="声音开关"></button><div id="time">0:00.00</div></div><canvas id="map" width="256" height="256"></canvas></div>
   <div id="track"><div class="flag"></div></div>
   <div class="hud-box" id="itemBox">
-    <div class="skills"><div class="cans" id="cans">气泡水 <i></i><i></i><i></i></div>
+    <div class="skills"><div class="jumpk"><kbd>空格</kbd>长按蓄力跳<span id="jumpBar"><b></b></span></div><div class="cans" id="cans">气泡水 <i></i><i></i><i></i></div>
       <div class="skbtns"><button class="sk" id="skTurtle" type="button">扔鳄龟<kbd>Q</kbd></button><button class="sk" id="skGun" type="button">水枪<kbd>E</kbd></button></div></div>
   </div>
 </div>
@@ -170,6 +179,7 @@ body.rot #rotHint{display:block}
   <button class="tbtn" id="tL" aria-label="左转">◀</button>
   <button class="tbtn" id="tR" aria-label="右转">▶</button>
     <button class="tbtn" id="tBrake">倒划</button>
+  <button class="tbtn" id="tJump">蓄力<br>跳跃</button>
   <button class="tbtn skill" id="tTurtle">扔<br>鳄龟</button>
   <button class="tbtn skill" id="tGun">豪华<br>水枪</button>
 </div>
@@ -182,9 +192,10 @@ body.rot #rotHint{display:block}
       <kbd>W / ↑</kbd><span>划桨前进</span>
       <kbd>A D / ← →</kbd><span>转向</span>
       <kbd>S / ↓</kbd><span>倒划减速</span>
+      <kbd>空格</kbd><span>长按蓄力，蓄满后松开就跳起来：越过礁石和对手，落水的水花会把旁边的人冲开</span>
       <kbd>Q / E</kbd><span>集满 3 罐气泡水后：Q 扔鳄龟，E 豪华水枪</span>
     </div>
-    <p class="sub" id="touchHelp" hidden>横屏游戏，自动划桨：左手按 ◀ ▶ 转向，集满 3 罐气泡水后，右手按「扔鳄龟」或「豪华水枪」放技能。<span id="rotHint">请把手机向左横过来拿（开着方向锁也能玩）。</span></p>
+    <p class="sub" id="touchHelp" hidden>横屏游戏，自动划桨：左手按 ◀ ▶ 转向，右手长按「蓄力跳跃」，圈满后松手就跳；集满 3 罐气泡水后按「扔鳄龟」或「豪华水枪」放技能。<span id="rotHint">请把手机向左横过来拿（开着方向锁也能玩）。</span></p>
     <div class="legend">
             <span class="chip"><b>绿箭头</b> 加速带</span>
       <span class="chip"><b>白色急流</b> 水流更快</span>
@@ -746,6 +757,8 @@ const SFX={
     v.type='sine';v.frequency.setValueAtTime(220,t);v.frequency.exponentialRampToValueAtTime(520,t+0.12);lfo.frequency.setValueAtTime(18,t);lfo.frequency.linearRampToValueAtTime(6,t+0.5);lg.gain.setValueAtTime(90,t);lg.gain.exponentialRampToValueAtTime(5,t+0.5);
     lfo.connect(lg);lg.connect(v.frequency);env(g,t,0.005,0.3,0.5);v.connect(g);g.connect(o);v.start(t);lfo.start(t);v.stop(t+0.6);lfo.stop(t+0.6);
     [1568,2093,2637].forEach((f,k)=>osc(o,t+0.04+k*0.04,'sine',f,0,0.12,0.12));},
+  charge(o,t){osc(o,t,'triangle',260,900,0.8,0.1,0.05);},
+  jump(o,t){osc(o,t,'sine',280,950,0.3,0.3,0.01);noise(o,t,0.3,0.3,'bandpass',800,2500,1,0.01);},
   poof(o,t){noise(o,t,0.3,0.35,'lowpass',1800,300,0.7,0.01);},
   capsize(o,t){SFX.splashBig(o,t);osc(o,t+0.1,'sine',720,150,0.45,0.32);for(let k=0;k<6;k++)osc(o,t+0.25+k*0.09+Math.random()*0.04,'sine',400+Math.random()*600,900+Math.random()*400,0.06,0.15);},
   wave(o,t){noise(o,t,1.3,0.6,'lowpass',350,2400,0.8,0.35);},
@@ -771,7 +784,7 @@ renderSoundUI();
 // ---------- input ----------
 const keys={};
 const isTouch=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
-const touch={l:false,r:false,drift:false,brake:false};
+const touch={l:false,r:false,drift:false,brake:false,jump:false};
 let itemPressed=false,skillPressed=null;
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT'){if(e.key==='Enter')document.getElementById('edOk').click();return;}if(!document.getElementById('editor').hidden)return;const k=e.key.toLowerCase();keys[k]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
   if(k==='q'&&!e.repeat)skillPressed='turtle';if(k==='e'&&!e.repeat)skillPressed='gun';if(k==='enter'&&state==='menu')startRace();});
@@ -779,14 +792,14 @@ addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 function holdBtn(id,prop){const el=document.getElementById(id);const on=e=>{e.preventDefault();touch[prop]=true;el.classList.add('on');try{el.setPointerCapture(e.pointerId)}catch(_){}};
   const off=()=>{touch[prop]=false;el.classList.remove('on');};el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off);}
-holdBtn('tL','l');holdBtn('tR','r');holdBtn('tBrake','brake');
+holdBtn('tL','l');holdBtn('tR','r');holdBtn('tBrake','brake');holdBtn('tJump','jump');
 for(const[id,sk]of[['tTurtle','turtle'],['tGun','gun'],['skTurtle','turtle'],['skGun','gun']])document.getElementById(id).addEventListener('pointerdown',e=>{e.preventDefault();skillPressed=sk;});
 if(isTouch){document.body.classList.add('touch');document.getElementById('touchHelp').hidden=false;document.getElementById('keyHelp').hidden=true;}
 
 // ---------- game state ----------
 const MAXV=22,ACC=15,BRAKE=20,BOOSTV=14,TURN=1.75;
 let state='menu',raceTime=0,countT=0,shake=0,resultT=0,time=0;
-const ui={canPips:[...document.querySelectorAll('#cans i')],skBtns:['tTurtle','tGun','skTurtle','skGun'].map(id=>document.getElementById(id)),lastCans:-1,pos:document.getElementById('pos'),spd:document.getElementById('spd'),time:document.getElementById('time'),msg:document.getElementById('msg')};
+const ui={jBtn:document.getElementById('tJump'),jBar:document.querySelector('#jumpBar b'),canPips:[...document.querySelectorAll('#cans i')],skBtns:['tTurtle','tGun','skTurtle','skGun'].map(id=>document.getElementById(id)),lastCans:-1,pos:document.getElementById('pos'),spd:document.getElementById('spd'),time:document.getElementById('time'),msg:document.getElementById('msg')};
 let msgT=0;
 function say(text,dur=1.2,small=false){ui.msg.textContent=text;ui.msg.classList.add('show');ui.msg.classList.toggle('small',small);msgT=dur;}
 
@@ -795,11 +808,11 @@ function resetRace(){
   const order=[1,2,3,4,5,0];
   order.forEach((ri,gi)=>{const r=racers[ri];const row=Math.floor(gi/3),col=gi%3;
     Object.assign(r,{u:uStart-row*7,x:[-6,0,6][col],h:0,v:0,boostT:0,boostTier:0,stunT:0,spin:0,item:null,drift:{on:false,dir:0,charge:0},finishTime:null,
-      steer:0,throttle:0,visDrift:0,roll:0,phase:Math.random()*6,lane:[-0.45,0,0.45][col],laneT:1+Math.random()*2,itemHold:0,rubber:1,cans:0,skillHold:0,scareT:0,capT:0,flip:0,gunActive:false,gunAge:0,hopT:0,stuckClock:0,stuckCount:0,checkU:uStart-row*7});
+      steer:0,throttle:0,visDrift:0,roll:0,phase:Math.random()*6,lane:[-0.45,0,0.45][col],laneT:1+Math.random()*2,itemHold:0,rubber:1,cans:0,skillHold:0,scareT:0,capT:0,flip:0,gunActive:false,gunAge:0,hopT:0,stuckClock:0,stuckCount:0,checkU:uStart-row*7,jumpT:0,jumpCharge:0,jumpCD:0,pu:0,px:0});
     if(r.turtle){r.mesh.remove(r.turtle);r.turtle=null;}if(r.gun)r.gun.visible=false;if(r.jet)r.jet.visible=false;});
   for(const b of boxes){b.active=true;b.mesh.visible=true;}
   for(const c of cans){c.active=true;c.mesh.visible=c.halo.visible=c.glow.visible=true;}
-  for(const f of flights)scene.remove(f.mesh);flights.length=0;
+  for(const f of flights)scene.remove(f.mesh);flights.length=0;for(const r of waveRings)scene.remove(r.m);waveRings.length=0;
   raceTime=0;
 }
 
@@ -886,14 +899,34 @@ function findClearX(u,prefer){const s={};sample(u,s);const lim=s.hw-2.5;let best
 function rescue(b){const u1=Math.min(b.u+9,L-20);b.hopU0=b.u;b.hopX0=b.x;b.hopU1=u1;b.hopX1=findClearX(u1,b.x);b.hopT=HOP;b.h=0;b.drift.on=false;b.stunT=0;
   const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.6,s.wz,22,0.9,0.97,1,5);sfx('pop',b.isPlayer?null:b.mesh.position);if(b.isPlayer)say('脱困！',0.8,true);}
 const HOP=0.6;
+const JUMP_CHARGE=0.8,JUMP_T=1.0,JUMP_H=4.6,JUMP_CD=1.0,SPLASH_R=7;
+const waveRings=[];const ringGeo2=new THREE.RingGeometry(0.8,1.2,40);ringGeo2.rotateX(-Math.PI/2);
+function jumpInput(b,held,dt){if(b.jumpCD>0)b.jumpCD-=dt;const can=b.jumpT<=0&&b.hopT<=0&&b.capT<=0&&b.jumpCD<=0;
+  if(!can){b.jumpCharge=0;return;}
+  if(held){const prev=b.jumpCharge;if(prev===0)sfx('charge');b.jumpCharge=Math.min(1,prev+dt/JUMP_CHARGE);if(prev<1&&b.jumpCharge>=1)sfx('tier2');}
+  else if(b.jumpCharge>0){if(b.jumpCharge>=1)startJump(b);else if(b.isPlayer)say('蓄满再松手',0.6,true);b.jumpCharge=0;}}
+function startJump(b){b.jumpT=JUMP_T;b.v=Math.max(b.v,15);b.drift.on=false;const s=toWorld(b.u,b.x,{});
+  for(let k=0;k<24;k++){const an=Math.random()*6.28;emitW(s.wx,s.y+0.3,s.wz,Math.cos(an)*3,2+Math.random()*3,Math.sin(an)*3,0.6);}sfx('jump',b.isPlayer?null:b.mesh.position);}
+function land(b){const s=toWorld(b.u,b.x,{});b.jumpCD=JUMP_CD;
+  for(let k=0;k<70;k++){const an=Math.random()*6.28,sp=3+Math.random()*7;emitW(s.wx,s.y+0.3,s.wz,Math.cos(an)*sp,3+Math.random()*7,Math.sin(an)*sp,0.9);}
+  burst(s.wx,s.y+0.4,s.wz,30,0.92,0.98,1,7);
+  const ring=new THREE.Mesh(ringGeo2,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.8,depthWrite:false}));ring.position.set(s.wx,s.y+0.1,s.wz);scene.add(ring);waveRings.push({m:ring,t:0});
+  sfx('splashBig',b.isPlayer?null:b.mesh.position);sfx('bump',b.isPlayer?null:b.mesh.position,0.8);if(b.isPlayer)shake=Math.max(shake,0.35);
+  let hit=0;for(const o of racers){if(o===b||o.jumpT>0||o.hopT>0||o.finishTime!=null)continue;const du=o.u-b.u,dx=o.x-b.x,d=Math.hypot(du,dx);if(d>=SPLASH_R)continue;
+    const f=1-d/SPLASH_R,nu=d>0.01?du/d:0,nx=d>0.01?dx/d:(Math.random()<0.5?-1:1);o.pu+=nu*f*16;o.px+=nx*f*16;o.scareT=Math.max(o.scareT,0.5);hit++;
+    if(o.isPlayer)say(`被 ${b.name} 的水花冲开了！`,0.9,true);}
+  if(b.isPlayer&&hit)say(`水花冲开了 ${hit} 人！`,0.9,true);}
+function updateRings(dt){for(let i=waveRings.length-1;i>=0;i--){const r=waveRings[i];r.t+=dt;const k=r.t/0.6;const sc=1+k*(SPLASH_R-1);r.m.scale.set(sc,1,sc);r.m.material.opacity=0.8*(1-k);if(k>=1){scene.remove(r.m);r.m.material.dispose();waveRings.splice(i,1);}}}
 const EASE_T=10;function startEase(){return state==='race'?smooth(0,EASE_T,raceTime):state==='countdown'?0:1;}function curEase(){return lerp(0.4,1,startEase());}
 function physics(b,dt){
   sample(b.u,sp);
   if(b.hopT>0){b.hopT-=dt;const k=clamp(1-b.hopT/HOP,0,1),e=k*k*(3-2*k);b.u=lerp(b.hopU0,b.hopU1,e);b.x=lerp(b.hopX0,b.hopX1,e);
     if(b.hopT<=0){b.v=Math.max(b.v,12);b.stuckClock=0;b.checkU=b.u;b.stuckCount=0;const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.4,s.wz,26,0.9,0.97,1,6);sfx('splashBig',b.isPlayer?null:b.mesh.position,0.6);}
     return;}
+  const air=b.jumpT>0;if(air){b.jumpT-=dt;if(b.jumpT<=0){b.jumpT=0;land(b);}}
+  if(b.pu||b.px){b.u+=b.pu*dt;b.x+=b.px*dt;const f=Math.exp(-5*dt);b.pu*=f;b.px*=f;if(Math.abs(b.pu)+Math.abs(b.px)<0.05){b.pu=0;b.px=0;}}
   // stuck check: under 1.5 m of progress in each of two consecutive seconds while racing (not when back-paddling on purpose)
-  if(state==='race'&&b.finishTime==null&&b.capT<=0){b.stuckClock=(b.stuckClock||0)+dt;if(b.stuckClock>=1){b.stuckClock=0;b.stuckCount=(b.u-(b.checkU??b.u)<1.5&&b.throttle>=0)?(b.stuckCount||0)+1:0;b.checkU=b.u;if(b.stuckCount>=2){b.stuckCount=0;rescue(b);return;}}}
+  if(state==='race'&&b.finishTime==null&&b.capT<=0&&!air){b.stuckClock=(b.stuckClock||0)+dt;if(b.stuckClock>=1){b.stuckClock=0;b.stuckCount=(b.u-(b.checkU??b.u)<1.5&&b.throttle>=0)?(b.stuckCount||0)+1:0;b.checkU=b.u;if(b.stuckCount>=2){b.stuckCount=0;rescue(b);return;}}}
   else{b.stuckClock=0;b.stuckCount=0;b.checkU=b.u;}
   if(b.capT>0){b.capT-=dt;b.drift.on=false;b.drift.charge=0;b.v=lerp(b.v,0,1-Math.exp(-5*dt));b.h*=1-dt;b.u+=sp.cur*0.45*dt;
     const lim=sp.hw-1.9;b.x=clamp(b.x,-lim,lim);if(b.finishTime==null&&b.u>=uF){b.finishTime=raceTime;if(b.isPlayer)onPlayerFinish();}return;}
@@ -925,14 +958,14 @@ function physics(b,dt){
   if(Math.abs(b.x)>lim){const sd=Math.sign(b.x);const impact=Math.abs(b.v*Math.sin(b.h));b.x=sd*lim;if(Math.sign(b.h)===sd)b.h*=-0.35;b.v-=b.v*2.2*dt;
     if(b.isPlayer&&impact>6){shake=Math.max(shake,0.25);sfx('bump');const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.4,s.wz,12,0.95,0.95,0.9,4);}}
   // rocks
-  for(const r of rocks){const du=b.u-r.u;if(du>6||du<-6)continue;const dx=b.x-r.x;const d=Math.hypot(du,dx)||0.01,m=r.r+1.55;
+  if(!air)for(const r of rocks){const du=b.u-r.u;if(du>6||du<-6)continue;const dx=b.x-r.x;const d=Math.hypot(du,dx)||0.01,m=r.r+1.55;
     if(d<m){b.u=r.u+du/d*m;b.x=r.x+dx/d*m;if(b.v>5){const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.5,s.wz,24,0.95,0.98,1,6);b.v*=0.35;b.stunT=0.55;sfx('rock',b.isPlayer?null:b.mesh.position);b.spin=0.6;b.drift.on=false;
       if(b.isPlayer){shake=0.45;say('撞礁石！',0.7,true);}}b.h+=dx/d*0.5;}}
   // boxes
   for(const bx of boxes){if(!bx.active)continue;if(Math.abs(b.u-bx.u)<2.5&&Math.abs(b.x-bx.x)<2.5){bx.active=false;bx.mesh.visible=false;bx.t=5;
     burst(bx.mesh.position.x,bx.mesh.position.y,bx.mesh.position.z,20,1,0.8,0.3,4);if(b.isPlayer)sfx('item');if(!b.item)giveItem(b,b.place||0);}}
   // cans
-  for(const c of cans){if(!c.active)continue;if(Math.abs(b.u-c.u)<2.3&&Math.abs(b.x-c.x)<2.3){c.active=false;c.mesh.visible=c.halo.visible=c.glow.visible=false;c.t=7;
+  if(!air)for(const c of cans){if(!c.active)continue;if(Math.abs(b.u-c.u)<2.3&&Math.abs(b.x-c.x)<2.3){c.active=false;c.mesh.visible=c.halo.visible=c.glow.visible=false;c.t=7;
     if(b.cans<SKILL_COST){b.cans++;if(b.isPlayer)sfx(b.cans>=SKILL_COST?'ready':'can');if(b.isPlayer)say(b.cans>=SKILL_COST?'技能就绪！':`气泡水 ${b.cans}/${SKILL_COST}`,0.6,true);if(b.cans>=SKILL_COST&&!b.isPlayer)b.skillHold=1+Math.random()*3;}
     burst(c.mesh.position.x,c.mesh.position.y,c.mesh.position.z,12,0.8,0.95,1,3);}}
   // pads
@@ -940,7 +973,7 @@ function physics(b,dt){
   // finish
   if(b.finishTime==null&&b.u>=uF){b.finishTime=raceTime;if(b.isPlayer)onPlayerFinish();}
 }
-function boatCollisions(){for(let i=0;i<racers.length;i++)for(let j=i+1;j<racers.length;j++){const a=racers[i],b=racers[j];const du=a.u-b.u,dx=a.x-b.x;if(Math.abs(du)>4)continue;
+function boatCollisions(){for(let i=0;i<racers.length;i++)for(let j=i+1;j<racers.length;j++){const a=racers[i],b=racers[j];if(a.jumpT>0||b.jumpT>0||a.hopT>0||b.hopT>0)continue;const du=a.u-b.u,dx=a.x-b.x;if(Math.abs(du)>4)continue;
   const d=Math.hypot(du,dx)||0.01;if(d<3.1){const push=(3.1-d)/2;const nu=du/d,nx=dx/d;a.u+=nu*push;b.u-=nu*push;a.x+=nx*push;b.x-=nx*push;const av=(a.v+b.v)/2;a.v=lerp(a.v,av,0.3);b.v=lerp(b.v,av,0.3);}}}
 
 // ---------- visuals per racer ----------
@@ -958,6 +991,11 @@ function updateMesh(b,dt){
   b.mesh.rotation.set(Math.sin(time*2.2+b.seed)*0.03*(1+sv.rf*3)+Math.sin(time*11+b.seed)*0.22*sk,Math.atan2(-b.dirx,-b.dirz)-b.visDrift+b.spin*Math.PI*2+Math.sin(time*0.9+b.seed)*0.1+Math.sin(time*7+b.seed)*0.35*sk,b.roll+Math.sin(time*1.7+b.seed)*0.03+Math.sin(time*14+b.seed)*0.38*sk+b.flip);
   if(b.flip>0.3)b.mesh.position.y+=0.25;
   if(b.hopT>0){const k=clamp(1-b.hopT/HOP,0,1);b.mesh.position.y+=Math.sin(Math.PI*k)*3.2;b.mesh.rotation.y+=k*Math.PI*2;}
+  let jh=0;if(b.jumpT>0){const k=clamp(1-b.jumpT/JUMP_T,0,1);jh=Math.sin(Math.PI*k)*JUMP_H;b.mesh.position.y+=jh;b.mesh.rotation.x+=(0.5-k)*0.7;}
+  const ch=b.jumpCharge||0,st=b.jumpT>0?Math.max(0,1-(1-b.jumpT/JUMP_T)*5)*0.18:0;b.mesh.scale.set(1+0.14*ch-st*0.5,1-0.28*ch+st,1+0.14*ch-st*0.5);
+  if(ch>0&&ch<1&&Math.random()<0.4)emitW(px+(Math.random()-0.5)*3,sv.y+0.2,pz+(Math.random()-0.5)*3,0,1.5,0,0.3);
+  if(!b.shadow){b.shadow=new THREE.Mesh(new THREE.CircleGeometry(1.7,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x06303a,transparent:true,opacity:0.35,depthWrite:false}));scene.add(b.shadow);}
+  b.shadow.visible=jh>0.3||b.hopT>0;if(b.shadow.visible){b.shadow.position.set(px,sv.y+0.06,pz);const sc=1-Math.min(0.5,jh/JUMP_H*0.5);b.shadow.scale.set(sc,1,sc);b.shadow.material.opacity=0.4-jh/JUMP_H*0.2;}
   if(b.capT>0&&Math.random()<dt*20)emit(px+(Math.random()-0.5)*2.5,sv.y+0.3,pz+(Math.random()-0.5)*2.5,0,2+Math.random()*2,0,1,1,1,0.5);
   const stroke=state==='race'||state==='finished'?Math.max(0.25,b.throttle):0.15;
   b.phase+=dt*(3.2+Math.max(0,b.v)*0.16)*stroke;
@@ -1020,6 +1058,7 @@ function updateCamera(dt){
     else if(b.gunTarget){const T=b.gunTarget.mesh.position;let dx=T.x-px,dz=T.z-pz;const d=Math.hypot(dx,dz)||1;dx/=d;dz/=d;
       const mx=(px+T.x)/2,mz=(pz+T.z)/2,sd=(-dz*b.dirx+dx*b.dirz)>0?-1:1,off=Math.min(26,d*0.75+6);tx=mx-dz*off*sd-dx*2;ty=py+3.2+d*0.08;tz=mz+dx*off*sd-dz*2;lx=mx;ly=py+1.3;lz=mz;tf=62;}}
   document.getElementById('cine').classList.toggle('on',!!cine);document.body.classList.toggle('cine',!!cine);
+  if(!cine&&b.jumpT>0){const jk=clamp(1-b.jumpT/JUMP_T,0,1),jy=Math.sin(Math.PI*jk)*JUMP_H*0.6;ty+=jy;ly+=jy*0.8;}
   const k=camInit?1-Math.exp(-dt*camRate):1;camInit=true;
   camPos.x=lerp(camPos.x,tx,k);camPos.y=lerp(camPos.y,ty,k);camPos.z=lerp(camPos.z,tz,k);
   camLook.x=lerp(camLook.x,lx,k);camLook.y=lerp(camLook.y,ly,k);camLook.z=lerp(camLook.z,lz,k);
@@ -1059,6 +1098,7 @@ function frame(now){
       const st=((keys['arrowright']||keys['d']||touch.r)?1:0)-((keys['arrowleft']||keys['a']||touch.l)?1:0);
       player.steer=lerp(player.steer,st,1-Math.exp(-dt*10));
       player.wantDrift=false;
+      jumpInput(player,!!(keys[' ']||touch.jump),dt);
       if(skillPressed)castSkill(player,skillPressed);
     }else aiControl(player,dt);
     itemPressed=false;skillPressed=null;
@@ -1067,6 +1107,7 @@ function frame(now){
     for(const b of racers)physics(b,dt);
     boatCollisions();
     updateSkills(dt);
+    updateRings(dt);
     if(state==='finished'){resultT-=dt;if(resultT<=0||racers.every(r=>r.finishTime!=null))showResults();}
   }else{itemPressed=false;}
   for(const b of racers)updateMesh(b,dt);
@@ -1080,6 +1121,7 @@ function frame(now){
     sample(player.u,sv);ui.spd.innerHTML=`${Math.round(Math.max(0,player.v*Math.cos(player.h)+sv.cur)*1.25)}<small> km/h</small>`;
     ui.time.textContent=fmt(raceTime);
     if(player.cans!==ui.lastCans){ui.lastCans=player.cans;ui.canPips.forEach((el,i)=>el.classList.toggle('on',i<player.cans));const rd=player.cans>=SKILL_COST;for(const el of ui.skBtns)el.classList.toggle('ready',rd);}
+    {const jc=player.jumpCharge||0;ui.jBtn.style.setProperty('--c',jc.toFixed(3));ui.jBtn.classList.toggle('full',jc>=1);const full=jc>=1;if(ui.jFull!==full){ui.jFull=full;ui.jBtn.innerHTML=full?'松手<br>跳！':'蓄力<br>跳跃';}ui.jBar.style.width=(jc*100)+'%';ui.jBar.style.background=jc>=1?'#ff7a1a':'#3fd0ff';}
     if(player.boostT>0&&!ui.wasBoost)sfx('boost');ui.wasBoost=player.boostT>0;
     
     for(const r of racers)r.dot.style.left=clamp((r.u-uStart)/(uF-uStart),0,1)*100+'%';
