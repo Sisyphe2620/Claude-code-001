@@ -32,6 +32,12 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 #hud .tr{top:calc(12px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));padding:8px;display:grid;gap:6px;justify-items:end}
 #time{font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums;padding-inline:6px}
 #map{width:128px;height:128px;display:block}
+.trrow{display:flex;align-items:center;gap:6px}
+.mute{width:34px;height:34px;border-radius:10px;border:1px solid var(--panel-edge);background:rgba(255,255,255,.06);color:var(--text);display:grid;place-items:center;padding:0;cursor:pointer}
+.mute svg{width:20px;height:20px}
+.mute:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
+.soundrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.soundrow .lab{margin-right:auto}
 #track{position:fixed;top:calc(20px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(36vw,360px);height:10px;border-radius:6px;background:rgba(5,34,42,.6);border:1px solid var(--panel-edge)}
 #track .flag{position:absolute;right:-6px;top:-7px;width:22px;height:22px;border-radius:4px;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/11px 11px;border:1px solid #fff}
 #track .dot{position:absolute;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background-size:cover;background-position:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
@@ -152,7 +158,7 @@ body.rot #rotHint{display:block}
 
 <div id="hud" hidden>
   <div class="hud-box tl"><div id="pos">6<span>/6</span></div><div class="lab">名次</div><div id="spd">0<small> km/h</small></div></div>
-  <div class="hud-box tr"><div id="time">0:00.00</div><canvas id="map" width="256" height="256"></canvas></div>
+  <div class="hud-box tr"><div class="trrow"><button id="muteBtn" class="mute" type="button" aria-label="声音开关"></button><div id="time">0:00.00</div></div><canvas id="map" width="256" height="256"></canvas></div>
   <div id="track"><div class="flag"></div></div>
   <div class="hud-box" id="itemBox">
     <div id="itemSlot">空</div>
@@ -196,6 +202,7 @@ body.rot #rotHint{display:block}
     <div class="roster-head"><span class="lab">全部 6 位选手（点头像改照片和名字）</span><button class="btn2 ghost small" id="bulkPick">一次选多张照片</button></div>
     <div class="roster" id="roster"></div>
     <p class="sub small" id="bulkMsg" hidden></p>
+    <div class="soundrow"><span class="lab">声音</span><button class="btn2 ghost small" id="musicBtn" type="button">音乐：开</button><button class="btn2 ghost small" id="sfxBtn" type="button">音效：开</button></div>
     <button class="go" id="startBtn">开始比赛</button>
   </div>
 </div>
@@ -555,6 +562,106 @@ function updateParticles(dt){for(let i=0;i<PMAX;i++){const p=parts[i];if(p.life<
   p.vy-=11*dt;pPos[i*3]+=p.vx*dt;pPos[i*3+1]+=p.vy*dt;pPos[i*3+2]+=p.vz*dt;}
   pGeo.attributes.position.needsUpdate=true;pGeo.attributes.color.needsUpdate=true;}
 
+// ---------- audio (all synthesized with Web Audio) ----------
+const AU={ctx:null,music:true,sfx:true,muted:false,mode:'off',want:'menu',step:0,next:0,timer:null};
+try{const o=JSON.parse(localStorage.getItem('river-tube-sound-v1')||'{}');if(o.music===false)AU.music=false;if(o.sfx===false)AU.sfx=false;if(o.muted)AU.muted=true;}catch(_){}
+function saveSound(){try{localStorage.setItem('river-tube-sound-v1',JSON.stringify({music:AU.music,sfx:AU.sfx,muted:AU.muted}));}catch(_){}}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function unlockAudio(){if(AU.ctx){if(AU.ctx.state==='suspended'&&!document.hidden)AU.ctx.resume();return;}
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(_){}
+  const c=AU.ctx=new AC();
+  const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(c.destination);
+  AU.master=c.createGain();AU.master.connect(comp);
+  AU.musicBus=c.createGain();AU.musicBus.connect(AU.master);
+  AU.sfxBus=c.createGain();AU.sfxBus.connect(AU.master);
+  applyVolumes();
+  const len=c.sampleRate*2,buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;AU.noise=buf;
+  // river ambience: looped noise through two filters
+  const src=c.createBufferSource();src.buffer=buf;src.loop=true;
+  AU.riverLP=c.createBiquadFilter();AU.riverLP.type='lowpass';AU.riverLP.frequency.value=500;
+  AU.riverG=c.createGain();AU.riverG.gain.value=0;
+  src.connect(AU.riverLP);AU.riverLP.connect(AU.riverG);AU.riverG.connect(AU.sfxBus);src.start();
+  AU.next=c.currentTime+0.1;AU.timer=setInterval(musicScheduler,25);
+  document.addEventListener('visibilitychange',()=>{if(!AU.ctx)return;if(document.hidden)AU.ctx.suspend();else AU.ctx.resume();});}
+addEventListener('pointerdown',unlockAudio,true);addEventListener('keydown',unlockAudio,true);
+function applyVolumes(){if(!AU.ctx)return;const t=AU.ctx.currentTime;AU.master.gain.setTargetAtTime(AU.muted?0:1.1,t,0.05);AU.musicBus.gain.setTargetAtTime(AU.music?0.5:0,t,0.1);AU.sfxBus.gain.setTargetAtTime(AU.sfx?0.85:0,t,0.05);}
+function setMusic(m){AU.want=m;}
+// --- instruments ---
+function env(g,t,a,peak,dec){g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec);}
+function osc(out,t,type,f0,f1,dur,vol,a=0.005,filt){const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);if(f1&&f1!==f0)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  env(g,t,a,vol,dur);let n=o;if(filt){const fl=c.createBiquadFilter();fl.type='lowpass';fl.frequency.value=filt;o.connect(fl);n=fl;}n.connect(g);g.connect(out);o.start(t);o.stop(t+a+dur+0.05);return o;}
+function noise(out,t,dur,vol,type,f0,f1,q=1,a=0.005){const c=AU.ctx,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=AU.noise;f.type=type;f.Q.value=q;f.frequency.setValueAtTime(f0,t);if(f1&&f1!==f0)f.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  env(g,t,a,vol,dur);s.connect(f);f.connect(g);g.connect(out);s.start(t,Math.random()*1.5);s.stop(t+a+dur+0.05);}
+const I={
+  marimba(t,m,v){const o=AU.musicBus;osc(o,t,'sine',mtof(m),0,0.55,v);osc(o,t,'sine',mtof(m)*4,0,0.07,v*0.25);},
+  pluck(t,m,v){const c=AU.ctx,o=c.createOscillator(),f=c.createBiquadFilter(),g=c.createGain();o.type='sawtooth';o.frequency.value=mtof(m);f.type='lowpass';f.Q.value=2;f.frequency.setValueAtTime(2600,t);f.frequency.exponentialRampToValueAtTime(500,t+0.25);
+    env(g,t,0.004,v,0.3);o.connect(f);f.connect(g);g.connect(AU.musicBus);o.start(t);o.stop(t+0.4);},
+  bass(t,m,v,d=0.28){osc(AU.musicBus,t,'triangle',mtof(m),0,d,v,0.01,900);},
+  kick(t,v){osc(AU.musicBus,t,'sine',150,45,0.22,v,0.002);},
+  clap(t,v){for(const k of[0,0.012,0.024])noise(AU.musicBus,t+k,0.09,v,'bandpass',1500,0,0.9,0.001);},
+  shaker(t,v){noise(AU.musicBus,t,0.045,v,'highpass',6500,0,0.7,0.003);},
+};
+// --- song: bright island-pop loop, C – G – Am – F ---
+const BPM=124,STEP=60/BPM/4;
+const CHORDS=[[60,64,67],[59,62,67],[57,60,64],[57,60,65]],ROOTS=[48,43,45,41];
+const _=null;
+const MEL={A:[[72,_,76,_,79,_,76,_,74,_,72,_,74,_,_,_],[71,_,74,_,79,_,74,_,72,_,71,_,67,_,_,_],[72,_,76,_,81,_,79,_,76,_,74,_,72,_,76,_],[77,_,76,_,74,_,72,_,74,_,_,_,72,_,_,_]],
+  B:[[79,_,_,79,_,_,81,_,79,_,76,_,74,_,76,_],[74,_,_,74,_,_,76,_,74,_,71,_,67,_,_,_],[76,_,_,76,_,_,79,_,81,_,79,_,76,_,74,_],[72,_,74,_,76,_,77,_,79,_,_,_,_,_,_,_]]};
+const FORM=['A','A','B','B'];
+function playStep(st,t){const mode=AU.mode;if(mode==='off')return;
+  const s16=st%16,bar=Math.floor(st/16),ci=bar%4,sec=FORM[Math.floor(bar/4)%4],race=mode==='race';
+  const mel=MEL[sec][ci][s16];if(mel)I.marimba(t,mel,race?0.22:0.15);
+  if(s16%4===2)CHORDS[ci].forEach((m,k)=>I.pluck(t+k*0.012,m,race?0.07:0.05));
+  if(!race&&s16%4===0)I.marimba(t,CHORDS[ci][(s16/4)%3]-12,0.08);
+  const bp={0:0,6:0,8:7,14:12};if(s16 in bp)I.bass(t,ROOTS[ci]+bp[s16],race?0.32:0.2);
+  if(race){if(s16===0||s16===8||(s16===11&&bar%2))I.kick(t,0.55);if(s16===4||s16===12)I.clap(t,0.22);I.shaker(t,s16%2?0.07:0.035);}}
+function musicScheduler(){const c=AU.ctx;if(!c)return;
+  while(AU.next<c.currentTime+0.12){
+    if(AU.want!==AU.mode&&(AU.want==='off'||AU.mode==='off'||AU.step%16===0)){AU.mode=AU.want;AU.step=0;}
+    playStep(AU.step,AU.next);AU.step++;AU.next+=STEP*(AU.step%2?1.08:0.92);}}
+// --- sound effects ---
+const _sv=new THREE.Vector3();
+const SFX={
+  click(o,t){osc(o,t,'sine',1200,900,0.05,0.15);},
+  beep(o,t){osc(o,t,'sine',880,0,0.18,0.35);osc(o,t,'triangle',880,0,0.12,0.12);},
+  go(o,t){osc(o,t,'sine',1319,0,0.5,0.32);osc(o,t,'triangle',1760,0,0.45,0.15);},
+  paddle(o,t){noise(o,t,0.13,0.16,'bandpass',1500,600,1.2);},
+  can(o,t){noise(o,t,0.2,0.4,'highpass',3500,8000,0.8);osc(o,t+0.04,'sine',1319,0,0.12,0.28);osc(o,t+0.1,'sine',1760,0,0.2,0.28);},
+  ready(o,t){[1047,1319,1568,2093].forEach((f,k)=>osc(o,t+k*0.07,'sine',f,0,0.22,0.25));noise(o,t,0.25,0.25,'highpass',5000,9000);},
+  item(o,t){[784,988,1175,1568].forEach((f,k)=>osc(o,t+k*0.05,'triangle',f,0,0.15,0.2));},
+  boost(o,t){noise(o,t,0.65,0.45,'bandpass',300,2600,1.5,0.03);osc(o,t,'triangle',90,180,0.5,0.18,0.02);},
+  tier1(o,t){osc(o,t,'triangle',660,0,0.1,0.18);},
+  tier2(o,t){osc(o,t,'triangle',990,0,0.12,0.2);osc(o,t+0.06,'triangle',1320,0,0.12,0.15);},
+  rock(o,t){osc(o,t,'sine',150,45,0.28,0.8,0.002);noise(o,t,0.18,0.55,'lowpass',1200,300);},
+  bump(o,t){noise(o,t,0.14,0.4,'lowpass',700,250);osc(o,t,'sine',95,50,0.15,0.4);},
+  splashBig(o,t){noise(o,t,0.75,0.7,'lowpass',3500,300,0.7);osc(o,t,'sine',320,80,0.3,0.3);},
+  throw(o,t){noise(o,t,0.4,0.3,'bandpass',600,2200,1.2,0.05);osc(o,t,'sine',420,950,0.28,0.14,0.02);},
+  scared(o,t){const c=AU.ctx,v=c.createOscillator(),lfo=c.createOscillator(),lg=c.createGain(),g=c.createGain();v.type='triangle';v.frequency.setValueAtTime(760,t+0.1);v.frequency.exponentialRampToValueAtTime(260,t+0.95);
+    lfo.frequency.value=13;lg.gain.value=70;lfo.connect(lg);lg.connect(v.frequency);env(g,t+0.1,0.02,0.22,0.85);v.connect(g);g.connect(o);v.start(t+0.1);lfo.start(t+0.1);v.stop(t+1.1);lfo.stop(t+1.1);},
+  pump(o,t){for(const k of[0,0.15]){noise(o,t+k,0.05,0.5,'highpass',2200,0,0.8,0.002);osc(o,t+k,'square',190,110,0.05,0.08,0.002,1200);}},
+  spray(o,t){noise(o,t+0.25,0.75,0.35,'highpass',2800,4000,0.6,0.05);},
+  capsize(o,t){SFX.splashBig(o,t);osc(o,t+0.1,'sine',720,150,0.45,0.32);for(let k=0;k<6;k++)osc(o,t+0.25+k*0.09+Math.random()*0.04,'sine',400+Math.random()*600,900+Math.random()*400,0.06,0.15);},
+  wave(o,t){noise(o,t,1.3,0.6,'lowpass',350,2400,0.8,0.35);},
+  finish(o,t){[[72,0],[76,0.12],[79,0.24],[84,0.4]].forEach(([m,d])=>{osc(o,t+d,'triangle',mtof(m),0,0.35,0.22);osc(o,t+d,'sine',mtof(m)*2,0,0.2,0.08);});[60,64,67,72].forEach(m=>osc(o,t+0.4,'triangle',mtof(m),0,1.2,0.1));},
+  win(o,t){SFX.finish(o,t);[[79,0.8],[81,0.92],[84,1.04],[88,1.2]].forEach(([m,d])=>osc(o,t+d,'sine',mtof(m),0,0.4,0.2));[65,69,72,77].forEach(m=>osc(o,t+1.2,'triangle',mtof(m),0,1.4,0.09));},
+};
+function sfx(name,pos,vol=1){const c=AU.ctx;if(!c||!AU.sfx||AU.muted||!SFX[name])return;let g=vol,pan=0;
+  if(pos){_sv.copy(pos).applyMatrix4(camera.matrixWorldInverse);const d=_sv.length();g*=clamp(1.6/(1+d/9),0,1);pan=clamp(_sv.x/14,-0.9,0.9);if(g<0.04)return;}
+  const out=c.createGain();out.gain.value=g;let node=out;if(c.createStereoPanner){const p=c.createStereoPanner();p.pan.value=pan;out.connect(p);node=p;}node.connect(AU.sfxBus);
+  SFX[name](out,c.currentTime+0.005);setTimeout(()=>{try{node.disconnect();}catch(_){}},3500);}
+const _sa={};
+function audioTick(){const c=AU.ctx;if(!c)return;sample(player.u,_sa);const racing=state==='race'||state==='finished';
+  AU.riverG.gain.setTargetAtTime((racing?0.07:0.035)+_sa.rf*0.16,c.currentTime,0.3);AU.riverLP.frequency.setTargetAtTime(450+_sa.rf*1400,c.currentTime,0.3);}
+const SPK_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const SPK_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+function renderSoundUI(){document.getElementById('muteBtn').innerHTML=AU.muted?SPK_OFF:SPK_ON;document.getElementById('muteBtn').setAttribute('aria-label',AU.muted?'打开声音':'关闭声音');
+  document.getElementById('musicBtn').textContent='音乐：'+(AU.music?'开':'关');document.getElementById('sfxBtn').textContent='音效：'+(AU.sfx?'开':'关');}
+document.getElementById('muteBtn').addEventListener('click',()=>{AU.muted=!AU.muted;applyVolumes();saveSound();renderSoundUI();});
+document.getElementById('musicBtn').addEventListener('click',()=>{AU.music=!AU.music;if(AU.music)AU.muted=false;applyVolumes();saveSound();renderSoundUI();});
+document.getElementById('sfxBtn').addEventListener('click',()=>{AU.sfx=!AU.sfx;if(AU.sfx)AU.muted=false;applyVolumes();saveSound();renderSoundUI();sfx('click');});
+renderSoundUI();
+
 // ---------- input ----------
 const keys={};
 const isTouch=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
@@ -598,7 +705,7 @@ function giveItem(b,place){const r=Math.random();const back=place/(racers.length
   b.itemHold=0.6+Math.random()*2;}
 function useItem(b){if(!b.item)return;const it=b.item;
   if(it.id==='turbo'||it.id==='turbo3'){b.boostT=Math.max(b.boostT,1.3);b.boostTier=2;if(b.isPlayer)say('加速！',0.6,true);it.n--;if(it.id==='turbo3'&&it.n>0)b.item={id:'turbo3',n:it.n};}
-  else if(it.id==='wave'){let hit=0;for(const o of racers){if(o===b||o.finishTime!=null)continue;const du=o.u-b.u;if(du>0&&du<75){o.stunT=1.1;o.v*=0.4;o.spin=1;hit++;const s=toWorld(o.u,o.x,{});burst(s.wx,s.y+0.5,s.wz,40,0.9,0.97,1,7);if(o.isPlayer){say('被大浪拍中！',1.1,true);shake=0.5;}}}
+  else if(it.id==='wave'){let hit=0;sfx('wave',b.isPlayer?null:b.mesh.position);for(const o of racers){if(o===b||o.finishTime!=null)continue;const du=o.u-b.u;if(du>0&&du<75){o.stunT=1.1;o.v*=0.4;o.spin=1;hit++;const s=toWorld(o.u,o.x,{});burst(s.wx,s.y+0.5,s.wz,40,0.9,0.97,1,7);if(o.isPlayer){say('被大浪拍中！',1.1,true);shake=0.5;}}}
     if(b.isPlayer)say(hit?`大浪拍中 ${hit} 人！`:'大浪落空',1,true);it.n=0;}
   if(it.n<=0)b.item=null;}
 
@@ -612,9 +719,9 @@ function castSkill(b,kind){if(b.cans<SKILL_COST||b.capT>0)return false;const t=n
   if(!t){if(b.isPlayer)say('附近没有对手',0.8,true);return false;}
   b.cans-=SKILL_COST;
   if(kind==='turtle'){const m=makeTurtle();m.position.copy(b.mesh.position).add(new THREE.Vector3(0,2.2,0));scene.add(m);
-    flights.push({kind,from:b,to:t,mesh:m,t:0,dur:0.85,sx:m.position.x,sy:m.position.y,sz:m.position.z});
+    flights.push({kind,from:b,to:t,mesh:m,t:0,dur:0.85,sx:m.position.x,sy:m.position.y,sz:m.position.z});sfx('throw',b.isPlayer?null:b.mesh.position);
     if(b.isPlayer)say(`扔出鳄龟 → ${t.name}`,0.9,true);else if(t.isPlayer)say(`${b.name} 朝你扔了只鳄龟！`,0.9,true);}
-  else{if(!b.gun){b.gun=makeWaterGun();b.gun.position.set(0.45,1.35,-0.55);b.mesh.add(b.gun);}b.gun.visible=true;b.gunT=1.0;b.gunTarget=t;b.gunHit=false;
+  else{if(!b.gun){b.gun=makeWaterGun();b.gun.position.set(0.45,1.35,-0.55);b.mesh.add(b.gun);}b.gun.visible=true;b.gunT=1.0;b.gunTarget=t;b.gunHit=false;sfx('pump',b.isPlayer?null:b.mesh.position);sfx('spray',b.isPlayer?null:b.mesh.position);
     if(b.isPlayer)say(`豪华水枪 → ${t.name}`,0.9,true);else if(t.isPlayer)say(`${b.name} 掏出了豪华水枪！`,0.9,true);}
   return true;}
 const fv=new THREE.Vector3(),fv2=new THREE.Vector3();
@@ -622,7 +729,7 @@ function updateSkills(dt){
   for(let i=flights.length-1;i>=0;i--){const f=flights[i];f.t+=dt/f.dur;const tp=f.to.mesh.position;const k=Math.min(1,f.t);
     f.mesh.position.set(lerp(f.sx,tp.x,k),lerp(f.sy,tp.y+1.4,k)+Math.sin(Math.PI*k)*5,lerp(f.sz,tp.z,k));f.mesh.rotation.x+=dt*9;f.mesh.rotation.z+=dt*5;
     if(f.t>=1){scene.remove(f.mesh);flights.splice(i,1);const t=f.to;burst(tp.x,tp.y+1,tp.z,30,0.9,0.97,1,6);
-      if(t.capT>0)continue;t.scareT=2.6;t.v*=0.45;t.drift.on=false;t.boostT=0;
+      sfx('splashBig',t.isPlayer?null:tp,0.8);if(t.capT>0)continue;t.scareT=2.6;sfx('scared',t.isPlayer?null:tp);t.v*=0.45;t.drift.on=false;t.boostT=0;
       if(t.turtle)t.mesh.remove(t.turtle);t.turtle=f.mesh;f.mesh.rotation.set(-0.3,0.4,0.1);f.mesh.position.set(0.55,0.85,-1.05);f.mesh.scale.setScalar(0.85);t.mesh.add(f.mesh);
       if(t.isPlayer){say(`被 ${f.from.name} 的鳄龟吓坏了！`,1.2,true);shake=0.5;}else if(f.from.isPlayer)say(`${t.name} 被鳄龟吓得乱晃！`,1,true);}}
   for(const b of racers){
@@ -630,7 +737,7 @@ function updateSkills(dt){
     if(b.gunT>0){b.gunT-=dt;const t=b.gunTarget;if(b.gun&&t){b.gun.lookAt(fv.copy(t.mesh.position).add(fv2.set(0,1,0)));
         if(b.gunT>0.15){const n=b.gun.localToWorld(fv2.set(0,0.05,0.9));const tx=t.mesh.position.x,ty=t.mesh.position.y+1,tz=t.mesh.position.z;const d=Math.hypot(tx-n.x,tz-n.z)||1,tt=d/32;
           for(let k=0;k<6;k++)emit(n.x,n.y,n.z,(tx-n.x)/tt+(Math.random()-0.5)*1.5,(ty-n.y)/tt+5.5*tt+(Math.random()-0.5),(tz-n.z)/tt+(Math.random()-0.5)*1.5,0.55,0.85,1,Math.min(1.2,tt+0.1));}
-        if(!b.gunHit&&b.gunT<0.55){b.gunHit=true;if(t.capT<=0){t.capT=2.6;t.scareT=0;t.drift.on=false;t.boostT=0;burst(t.mesh.position.x,t.mesh.position.y+1,t.mesh.position.z,40,0.6,0.88,1,7);
+        if(!b.gunHit&&b.gunT<0.55){b.gunHit=true;if(t.capT<=0){t.capT=2.6;sfx('capsize',t.isPlayer?null:t.mesh.position);t.scareT=0;t.drift.on=false;t.boostT=0;burst(t.mesh.position.x,t.mesh.position.y+1,t.mesh.position.z,40,0.6,0.88,1,7);
           if(t.isPlayer){say(`被 ${b.name} 喷翻船了！`,1.4,true);shake=0.6;}else if(b.isPlayer)say(`把 ${t.name} 喷翻了！`,1,true);}}}
       if(b.gunT<=0&&b.gun)b.gun.visible=false;}}}
 
@@ -685,17 +792,17 @@ function physics(b,dt){
   // banks
   const lim=sp.hw-1.9;
   if(Math.abs(b.x)>lim){const sd=Math.sign(b.x);const impact=Math.abs(b.v*Math.sin(b.h));b.x=sd*lim;if(Math.sign(b.h)===sd)b.h*=-0.35;b.v-=b.v*2.2*dt;
-    if(b.isPlayer&&impact>6){shake=Math.max(shake,0.25);const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.4,s.wz,12,0.95,0.95,0.9,4);}}
+    if(b.isPlayer&&impact>6){shake=Math.max(shake,0.25);sfx('bump');const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.4,s.wz,12,0.95,0.95,0.9,4);}}
   // rocks
   for(const r of rocks){const du=b.u-r.u;if(du>6||du<-6)continue;const dx=b.x-r.x;const d=Math.hypot(du,dx)||0.01,m=r.r+1.55;
-    if(d<m){b.u=r.u+du/d*m;b.x=r.x+dx/d*m;if(b.v>5){const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.5,s.wz,24,0.95,0.98,1,6);b.v*=0.35;b.stunT=0.55;b.spin=0.6;b.drift.on=false;
+    if(d<m){b.u=r.u+du/d*m;b.x=r.x+dx/d*m;if(b.v>5){const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.5,s.wz,24,0.95,0.98,1,6);b.v*=0.35;b.stunT=0.55;sfx('rock',b.isPlayer?null:b.mesh.position);b.spin=0.6;b.drift.on=false;
       if(b.isPlayer){shake=0.45;say('撞礁石！',0.7,true);}}b.h+=dx/d*0.5;}}
   // boxes
   for(const bx of boxes){if(!bx.active)continue;if(Math.abs(b.u-bx.u)<2.5&&Math.abs(b.x-bx.x)<2.5){bx.active=false;bx.mesh.visible=false;bx.t=5;
-    burst(bx.mesh.position.x,bx.mesh.position.y,bx.mesh.position.z,20,1,0.8,0.3,4);if(!b.item)giveItem(b,b.place||0);}}
+    burst(bx.mesh.position.x,bx.mesh.position.y,bx.mesh.position.z,20,1,0.8,0.3,4);if(b.isPlayer)sfx('item');if(!b.item)giveItem(b,b.place||0);}}
   // cans
   for(const c of cans){if(!c.active)continue;if(Math.abs(b.u-c.u)<2.3&&Math.abs(b.x-c.x)<2.3){c.active=false;c.mesh.visible=false;c.t=7;
-    if(b.cans<SKILL_COST){b.cans++;if(b.isPlayer)say(b.cans>=SKILL_COST?'技能就绪！':`气泡水 ${b.cans}/${SKILL_COST}`,0.6,true);if(b.cans>=SKILL_COST&&!b.isPlayer)b.skillHold=1+Math.random()*3;}
+    if(b.cans<SKILL_COST){b.cans++;if(b.isPlayer)sfx(b.cans>=SKILL_COST?'ready':'can');if(b.isPlayer)say(b.cans>=SKILL_COST?'技能就绪！':`气泡水 ${b.cans}/${SKILL_COST}`,0.6,true);if(b.cans>=SKILL_COST&&!b.isPlayer)b.skillHold=1+Math.random()*3;}
     burst(c.mesh.position.x,c.mesh.position.y,c.mesh.position.z,12,0.8,0.95,1,3);}}
   // pads
   for(const p of pads){if(Math.abs(b.u-p.u)<4.4&&Math.abs(b.x-p.x)<2.5){if(b.boostT<0.9){b.boostT=0.9;b.boostTier=1;}}}
@@ -722,6 +829,7 @@ function updateMesh(b,dt){
   if(b.capT>0&&Math.random()<dt*20)emit(px+(Math.random()-0.5)*2.5,sv.y+0.3,pz+(Math.random()-0.5)*2.5,0,2+Math.random()*2,0,1,1,1,0.5);
   const stroke=state==='race'||state==='finished'?Math.max(0.25,b.throttle):0.15;
   b.phase+=dt*(3.2+Math.max(0,b.v)*0.16)*stroke;
+  if(b.isPlayer){const sn=Math.abs(Math.sin(b.phase))>0.95;if(sn&&!b.wasStroke&&b.capT<=0&&state==='race')sfx('paddle');b.wasStroke=sn;}
   b.paddle.rotation.z=Math.sin(b.phase)*0.55;b.paddle.rotation.y=Math.cos(b.phase)*0.4;
   // spray
   const near=Math.hypot(px-camera.position.x,pz-camera.position.z)<70;
@@ -755,16 +863,16 @@ const hud=document.getElementById('hud'),menu=document.getElementById('menu'),re
 function tryLandscape(){if(!isTouch)return;try{const el=document.documentElement;const fs=el.requestFullscreen||el.webkitRequestFullscreen;
   const p=fs&&fs.call(el);const lock=()=>{try{const q=screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape');q&&q.catch&&q.catch(()=>{});}catch(_){}};
   if(p&&p.then)p.then(lock,()=>{});else lock();}catch(_){}}
-function startRace(){tryLandscape();resetRace();state='countdown';countT=3.6;menu.hidden=true;result.hidden=true;hud.hidden=false;touchEl.hidden=!isTouch;}
+function startRace(){unlockAudio();sfx('click');setMusic('off');tryLandscape();resetRace();ui.wasBoost=false;ui.dTier=0;state='countdown';countT=3.6;menu.hidden=true;result.hidden=true;hud.hidden=false;touchEl.hidden=!isTouch;}
 document.getElementById('startBtn').addEventListener('click',startRace);
 document.getElementById('againBtn').addEventListener('click',startRace);
-function onPlayerFinish(){state='finished';resultT=3.5;const place=standings().indexOf(player)+1;say(place===1?'冠军！':`第 ${place} 名`,2.5);}
+function onPlayerFinish(){state='finished';resultT=3.5;const place=standings().indexOf(player)+1;setMusic('off');sfx(place===1?'win':'finish');say(place===1?'冠军！':`第 ${place} 名`,2.5);}
 function standings(){return racers.slice().sort((a,b)=>{if(a.finishTime!=null&&b.finishTime!=null)return a.finishTime-b.finishTime;if(a.finishTime!=null)return -1;if(b.finishTime!=null)return 1;return b.u-a.u;});}
 const fmt=t=>{const m=Math.floor(t/60),s=t-m*60;return`${m}:${s<10?'0':''}${s.toFixed(2)}`;};
 function showResults(){
   const st=standings();const rows=st.map((r,i)=>{const t=r.finishTime!=null?r.finishTime:raceTime+(uF-r.u)/26;return`<tr class="${r.isPlayer?'me':''}"><td>${i+1}</td><td><span class="sw" style="background:${r.css}"></span>${r.name}</td><td>${r.finishTime!=null?'':'约 '}${fmt(t)}</td></tr>`;}).join('');
   document.getElementById('resTable').innerHTML=rows;document.getElementById('placeTxt').textContent=`第 ${st.indexOf(player)+1} 名`;
-  result.hidden=false;touchEl.hidden=true;state='results';setTimeout(()=>document.getElementById('againBtn').focus(),50);}
+  result.hidden=false;touchEl.hidden=true;state='results';setMusic('menu');setTimeout(()=>document.getElementById('againBtn').focus(),50);}
 
 // ---------- camera ----------
 const camPos=new THREE.Vector3(),camLook=new THREE.Vector3();let camInit=false,fov=68;
@@ -799,7 +907,7 @@ function frame(now){
   for(const r of rocks){const k=1+Math.sin(time*4+r.u)*0.12;r.ring.scale.set(r.base*k,1,r.base*k);}
 
   if(state==='countdown'){countT-=dt;const n=Math.ceil(countT-0.6);
-    if(countT>0.6){if(ui.msg.textContent!==String(n))say(String(n),1);}else{say('出发！',0.8);state='race';}}
+    if(countT>0.6){if(ui.msg.textContent!==String(n)){say(String(n),1);if(countT<3.05)sfx('beep');}}else{say('出发！',0.8);state='race';sfx('go');setMusic('race');}}
   if(state==='race'||state==='finished'||state==='results'){
     raceTime+=state==='race'?dt:0;if(state!=='race')raceTime+=dt;
     // player input
@@ -823,6 +931,7 @@ function frame(now){
   for(const b of racers)updateMesh(b,dt);
   updateParticles(dt);
   updateCamera(dt);
+  audioTick();
 
   // HUD
   if(!hud.hidden){
@@ -832,7 +941,8 @@ function frame(now){
     const itKey=player.item?player.item.id+player.item.n:'';
     if(itKey!==lastItem){lastItem=itKey;if(player.item){const d=ITEMS[player.item.id];ui.slot.innerHTML=player.item.id==='turbo3'?`加速<br>×${player.item.n}`:d.label;ui.slot.className=d.cls;}else{ui.slot.textContent='空';ui.slot.className='';}}
     if(player.cans!==ui.lastCans){ui.lastCans=player.cans;ui.canPips.forEach((el,i)=>el.classList.toggle('on',i<player.cans));const rd=player.cans>=SKILL_COST;for(const el of ui.skBtns)el.classList.toggle('ready',rd);}
-    const c=player.drift.on?player.drift.charge:0;ui.drift.style.width=Math.min(100,c/2*100)+'%';ui.drift.style.background=c>2?'#ff7a1a':c>1?'#3fd0ff':'#a6d2d6';
+    if(player.boostT>0&&!ui.wasBoost)sfx('boost');ui.wasBoost=player.boostT>0;
+    const c=player.drift.on?player.drift.charge:0;{const tier=c>2?2:c>1?1:0;if(tier>(ui.dTier||0))sfx('tier'+tier);ui.dTier=tier;}ui.drift.style.width=Math.min(100,c/2*100)+'%';ui.drift.style.background=c>2?'#ff7a1a':c>1?'#3fd0ff':'#a6d2d6';
     for(const r of racers)r.dot.style.left=clamp((r.u-uStart)/(uF-uStart),0,1)*100+'%';
     drawMap();
   }
