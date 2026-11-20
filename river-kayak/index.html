@@ -19,6 +19,8 @@
 }
 html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--text);font-family:var(--body);-webkit-user-select:none;user-select:none}
 [hidden]{display:none!important}
+#stage{position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;transform-origin:0 0}
+body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 #game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .hud-box{position:fixed;background:var(--panel);border:1px solid var(--panel-edge);border-radius:14px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #hud .tl{top:calc(12px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));padding:8px 16px 10px;display:grid;gap:2px;min-width:96px}
@@ -72,13 +74,35 @@ tr.me td{color:var(--vest);font-weight:600}
 #tBrake{right:max(16px,env(safe-area-inset-right,0px));bottom:calc(106px + env(safe-area-inset-bottom,0px));width:56px!important;height:56px!important;font-size:16px!important}
 body.touch #itemBox{bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 body.touch .itemkey .k{display:none}
+/* phone held sideways (real landscape or rotated stage): short screen, thumbs at both edges */
+body.compact #hud .tl{padding:6px 12px 8px;min-width:80px}
+body.compact #pos{font-size:36px}body.compact #pos span{font-size:18px}
+body.compact #spd{font-size:18px}
+body.compact #time{font-size:18px}body.compact #map{width:84px;height:84px}
+body.compact #track{top:14px;width:34%}
+body.compact.touch #itemBox{bottom:10px;padding:6px 10px}
+body.compact #itemSlot{width:52px;height:52px;font-size:15px}
+body.compact .overlay{place-items:center;padding-block:10px}
+body.compact .card{padding:16px 20px;gap:10px;width:min(620px,100%)}
+body.compact .card h1{font-size:34px}
+body.compact .sub{font-size:13px;line-height:1.5}
+body.compact .go{font-size:22px;padding:10px 18px}
+body.compact .place{font-size:40px}
+body.compact td{padding:3px 4px;font-size:13px}
+body.compact #touch .tbtn{width:78px;height:78px}
+body.compact #tR{left:calc(max(16px,env(safe-area-inset-left,0px)) + 92px)}
+body.compact #tDrift{right:calc(max(16px,env(safe-area-inset-right,0px)) + 92px)}
+body.compact #tBrake{bottom:108px}
+#rotHint{display:none}
+body.rot #rotHint{display:block}
 @media (max-width:520px){
-  #pos{font-size:40px}#map{width:96px;height:96px}#time{font-size:20px}
-  #track{top:calc(150px + env(safe-area-inset-top,0px));width:70vw}
+  body:not(.compact) #pos{font-size:40px}body:not(.compact) #map{width:96px;height:96px}body:not(.compact) #time{font-size:20px}
+  body:not(.compact) #track{top:calc(150px + env(safe-area-inset-top,0px));width:70vw}
 }
 @media (prefers-reduced-motion:reduce){#msg{transition:none}}
 </style>
 
+<div id="stage">
 <canvas id="game"></canvas>
 
 <div id="hud" hidden>
@@ -111,7 +135,7 @@ body.touch .itemkey .k{display:none}
       <kbd>空格</kbd><span>使用道具</span>
       <kbd>S / ↓</kbd><span>倒划减速</span>
     </div>
-    <p class="sub" id="touchHelp" hidden>手机上自动划桨：左下角转向，右下角漂移和道具。</p>
+    <p class="sub" id="touchHelp" hidden>横屏游戏，自动划桨：左手按 ◀ ▶ 转向，右手按漂移和道具。<span id="rotHint">请把手机向左横过来拿（开着方向锁也能玩）。</span></p>
     <div class="legend">
       <span class="chip"><b>? 箱子</b> 随机道具</span>
       <span class="chip"><b>绿箭头</b> 加速带</span>
@@ -129,6 +153,8 @@ body.touch .itemkey .k{display:none}
     <table id="resTable"></table>
     <button class="go" id="againBtn">再来一局</button>
   </div>
+</div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -349,7 +375,7 @@ function holdBtn(id,prop){const el=document.getElementById(id);const on=e=>{e.pr
   const off=()=>{touch[prop]=false;el.classList.remove('on');};el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off);}
 holdBtn('tL','l');holdBtn('tR','r');holdBtn('tDrift','drift');holdBtn('tBrake','brake');
 document.getElementById('tItem').addEventListener('pointerdown',e=>{e.preventDefault();itemPressed=true;});
-if(isTouch){document.body.classList.add('touch');document.getElementById('touchHelp').hidden=false;}
+if(isTouch){document.body.classList.add('touch');document.getElementById('touchHelp').hidden=false;document.getElementById('keyHelp').hidden=true;}
 
 // ---------- game state ----------
 const MAXV=22,ACC=15,BRAKE=20,BOOSTV=14,TURN=1.75;
@@ -481,7 +507,10 @@ function drawMap(){mctx.clearRect(0,0,256,256);mctx.drawImage(mapBase,0,0);
 
 // ---------- flow ----------
 const hud=document.getElementById('hud'),menu=document.getElementById('menu'),result=document.getElementById('result'),touchEl=document.getElementById('touch');
-function startRace(){resetRace();state='countdown';countT=3.6;menu.hidden=true;result.hidden=true;hud.hidden=false;touchEl.hidden=!isTouch;}
+function tryLandscape(){if(!isTouch)return;try{const el=document.documentElement;const fs=el.requestFullscreen||el.webkitRequestFullscreen;
+  const p=fs&&fs.call(el);const lock=()=>{try{const q=screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape');q&&q.catch&&q.catch(()=>{});}catch(_){}};
+  if(p&&p.then)p.then(lock,()=>{});else lock();}catch(_){}}
+function startRace(){tryLandscape();resetRace();state='countdown';countT=3.6;menu.hidden=true;result.hidden=true;hud.hidden=false;touchEl.hidden=!isTouch;}
 document.getElementById('startBtn').addEventListener('click',startRace);
 document.getElementById('againBtn').addEventListener('click',startRace);
 function onPlayerFinish(){state='finished';resultT=3.5;const place=standings().indexOf(player)+1;say(place===1?'冠军！':`第 ${place} 名`,2.5);}
@@ -509,8 +538,11 @@ function updateCamera(dt){
 }
 
 // ---------- main loop ----------
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
-addEventListener('resize',resize);resize();
+const stage=document.getElementById('stage');
+function resize(){const W=innerWidth,H=innerHeight;const rot=isTouch&&H>W;const w=rot?H:W,h=rot?W:H;
+  document.body.classList.toggle('rot',rot);document.body.classList.toggle('compact',isTouch&&h<560);
+  stage.style.width=w+'px';stage.style.height=h+'px';renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,200));resize();
 resetRace();
 let last=performance.now(),lastPlace=-1,lastItem='';
 function frame(now){
