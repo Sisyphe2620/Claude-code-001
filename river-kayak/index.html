@@ -74,7 +74,14 @@ body.compact .slot::after{right:calc(50% - 28px)}
 .itemkey{font-size:12px;color:var(--muted);display:grid;gap:6px}
 #driftBar{width:110px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}
 #driftBar i{display:block;height:100%;width:0;background:var(--muted)}
-#msg{position:fixed;left:0;right:0;top:34%;text-align:center;font-family:var(--display);font-size:clamp(40px,10vw,96px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.35),0 0 30px rgba(63,208,255,.5);pointer-events:none;opacity:0;transition:opacity .2s}
+#cine{position:fixed;inset:0;pointer-events:none;z-index:5}
+#cine::before,#cine::after{content:"";position:absolute;left:0;right:0;height:11%;background:#05090b;transition:transform .25s ease}
+#cine::before{top:0;transform:translateY(-100%)}#cine::after{bottom:0;transform:translateY(100%)}
+#cine.on::before,#cine.on::after{transform:none}
+body.cine #msg{top:12%}
+#hud .hud-box,#track{transition:opacity .25s}
+body.cine #hud .hud-box,body.cine #track{opacity:0}
+#msg{z-index:6;position:fixed;left:0;right:0;top:34%;text-align:center;font-family:var(--display);font-size:clamp(40px,10vw,96px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.35),0 0 30px rgba(63,208,255,.5);pointer-events:none;opacity:0;transition:opacity .2s}
 #msg.show{opacity:1}
 #msg.small{font-size:clamp(24px,5vw,44px)}
 .overlay{position:fixed;inset:0;display:flex;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(4,30,38,.25),rgba(4,30,38,.7));overflow:auto}
@@ -167,6 +174,7 @@ body.rot #rotHint{display:block}
       <div class="skbtns"><button class="sk" id="skTurtle" type="button">扔鳄龟<kbd>Q</kbd></button><button class="sk" id="skGun" type="button">水枪<kbd>E</kbd></button></div></div>
   </div>
 </div>
+<div id="cine"></div>
 <div id="msg"></div>
 
 <div id="touch" hidden>
@@ -460,14 +468,59 @@ function makeTurtle(){const g=new THREE.Group();
   for(const[x,z]of[[-0.6,-0.6],[0.6,-0.6],[-0.6,0.6],[0.6,0.6]]){const leg=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.14,0.42),skinM);leg.position.set(x,0,z);leg.rotation.y=x*z>0?0.6:-0.6;g.add(leg);}
   const tail=new THREE.Mesh(new THREE.ConeGeometry(0.1,0.6,4),skinM);tail.rotation.x=Math.PI/2;tail.position.set(0,0.02,1.15);g.add(tail);
   return g;}
-function makeWaterGun(){const g=new THREE.Group();
-  const body=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.3,1.1),new THREE.MeshStandardMaterial({color:0xff7a1a,roughness:0.4}));g.add(body);
-  const tank=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.75,12),new THREE.MeshStandardMaterial({color:0x7ad35a,transparent:true,opacity:0.85,roughness:0.2}));tank.rotation.x=Math.PI/2;tank.position.set(0,0.3,-0.05);g.add(tank);
-  const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.1,0.4,8),new THREE.MeshStandardMaterial({color:0x2f7cf6}));nozzle.rotation.x=Math.PI/2;nozzle.position.set(0,0.02,0.75);g.add(nozzle);
-  const pump=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.35,8),new THREE.MeshStandardMaterial({color:0xffd23f}));pump.rotation.x=Math.PI/2;pump.position.set(0,-0.12,0.35);g.add(pump);
-  const grip=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.4,0.18),new THREE.MeshStandardMaterial({color:0x2f7cf6}));grip.position.set(0,-0.3,-0.3);grip.rotation.x=0.3;g.add(grip);
-  const gold=new THREE.Mesh(new THREE.TorusGeometry(0.17,0.03,6,12),new THREE.MeshStandardMaterial({color:0xffcc33,metalness:0.9,roughness:0.2}));gold.position.z=0.55;g.add(gold);
-  g.scale.setScalar(1.3);return g;}
+// glossy environment for plastic + water highlights
+let ENV=null;
+function getEnv(){if(ENV)return ENV;const es=new THREE.Scene();const geo=new THREE.SphereGeometry(10,32,16);const col=[],pos=geo.attributes.position,c=new THREE.Color();
+  for(let i=0;i<pos.count;i++){const y=pos.getY(i)/10;if(y>0)c.set(0xbfe8ff).lerp(new THREE.Color(0xffffff),Math.max(0,y-0.55)*2);else c.set(0x5a9a52).lerp(new THREE.Color(0x2a6f86),-y);col.push(c.r,c.g,c.b);}
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));es.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide})));
+  for(const[x,y,z,r]of[[5,7,3,1.6],[-6,4,-5,0.9]]){const m=new THREE.Mesh(new THREE.SphereGeometry(r,12,8),new THREE.MeshBasicMaterial({color:0xffffff}));m.position.set(x,y,z);es.add(m);}
+  const pm=new THREE.PMREMGenerator(renderer);ENV=pm.fromScene(es,0.02).texture;pm.dispose();return ENV;}
+function plastic(color,opacity,extra){return new THREE.MeshPhysicalMaterial(Object.assign({color,roughness:0.16,metalness:0,clearcoat:1,clearcoatRoughness:0.06,envMap:getEnv(),envMapIntensity:1.2,transparent:opacity<1,opacity},extra||{}));}
+// cartoon water gun; nozzle points along local +z
+function makeWaterGun(){const g=new THREE.Group();const parts=[];
+  const add=(m,delay)=>{m.userData.base=m.scale.clone();m.userData.delay=delay;m.scale.setScalar(0.0001);parts.push(m);g.add(m);return m;};
+  const bodyM=plastic(0xff7a1a,0.8);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.25,1.1,18),bodyM);body.rotation.x=Math.PI/2;add(body,0);
+  const rear=new THREE.Mesh(new THREE.SphereGeometry(0.25,18,12),bodyM);rear.position.z=-0.55;add(rear,0.02);
+  const stripe=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.035,8,24),plastic(0xffffff,0.9));stripe.position.z=0.08;add(stripe,0.1);
+  const tank=new THREE.Mesh(new THREE.SphereGeometry(0.34,20,14),plastic(0x9cf07a,0.38,{roughness:0.05,depthWrite:false}));tank.scale.set(1,0.85,1.35);tank.position.set(0,0.42,-0.15);add(tank,0.08);
+  const water=new THREE.Mesh(new THREE.SphereGeometry(0.28,18,12,0,Math.PI*2,Math.PI*0.42,Math.PI*0.58),plastic(0x3fb8ff,0.6,{roughness:0.03,depthWrite:false}));water.scale.set(1,0.85,1.35);water.position.set(0,0.42,-0.15);add(water,0.12);
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,0.13,14),plastic(0xff4f9a,0.9));cap.position.set(0,0.74,-0.2);add(cap,0.18);
+  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.14,0.55,16),plastic(0x2f7cf6,0.78));barrel.rotation.x=Math.PI/2;barrel.position.z=0.78;add(barrel,0.14);
+  const tip=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.045,10,18),plastic(0xffd23f,0.9));tip.position.z=1.06;add(tip,0.2);
+  const pump=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,0.38,16),plastic(0xffd23f,0.8));pump.rotation.x=Math.PI/2;pump.position.set(0,-0.18,0.38);add(pump,0.16);
+  for(const z of[0.28,0.38,0.48]){const r=new THREE.Mesh(new THREE.TorusGeometry(0.135,0.018,6,16),plastic(0xffb300,0.9));r.position.set(0,-0.18,z);add(r,0.2);}
+  const grip=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.46,0.21),bodyM);grip.position.set(0,-0.32,-0.3);grip.rotation.x=0.35;add(grip,0.06);
+  const trig=new THREE.Mesh(new THREE.TorusGeometry(0.09,0.03,8,12,Math.PI),plastic(0xff4f9a,0.9));trig.position.set(0,-0.2,-0.08);trig.rotation.set(0,Math.PI/2,Math.PI);add(trig,0.22);
+  const gold=new THREE.Mesh(new THREE.TorusGeometry(0.17,0.032,8,18),new THREE.MeshStandardMaterial({color:0xffcc33,metalness:0.9,roughness:0.12,envMap:getEnv()}));gold.position.z=0.55;add(gold,0.24);
+  for(const sd of[-1,1]){const fin=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.22,0.36),plastic(0x2f7cf6,0.75));fin.position.set(sd*0.24,0.08,-0.5);fin.rotation.z=sd*0.5;add(fin,0.26);}
+  const bubble=new THREE.Mesh(new THREE.SphereGeometry(0.8,28,18),plastic(0xdff6ff,0.3,{roughness:0.02,depthWrite:false,envMapIntensity:1.6}));bubble.visible=false;g.add(bubble);
+  g.userData={parts,bubble,water,pump};return g;}
+// translucent jet of water
+let jetMat=null;
+const jetTex=canvasTex(128,32,(g,w,h)=>{g.fillStyle='rgba(200,240,255,0.55)';g.fillRect(0,0,w,h);for(let i=0;i<16;i++){g.fillStyle=`rgba(255,255,255,${0.35+Math.random()*0.5})`;const x=Math.random()*w,y=Math.random()*h,l=8+Math.random()*26,t=2+Math.random()*3;
+  for(const ox of[-w,0,w]){g.fillRect(x+ox,y,l,t);}}});
+function getJetMat(){if(!jetMat){jetTex.repeat.set(5,1);jetMat=plastic(0x9fe4ff,0.5,{map:jetTex,roughness:0.02,depthWrite:false,side:THREE.DoubleSide,envMapIntensity:1.5});}return jetMat;}
+function updateJet(b,frac,p0,p2,a){const d=p0.distanceTo(p2);const p1=p0.clone().lerp(p2,0.5);p1.y+=d*0.12;const curve=new THREE.QuadraticBezierCurve3(p0.clone(),p1,p2.clone());
+  const r=0.16*(1+0.18*Math.sin(a*55));const geo=new THREE.TubeGeometry(curve,28,r,10,false);
+  if(b.jet){b.jet.geometry.dispose();b.jet.geometry=geo;}else{b.jet=new THREE.Mesh(geo,getJetMat());b.jet.frustumCulled=false;b.jet.renderOrder=2;scene.add(b.jet);}
+  geo.setDrawRange(0,Math.floor(frac*28)*10*6);b.jet.visible=true;return curve;}
+const elastic=t=>t<=0?0:t>=1?1:Math.pow(2,-10*t)*Math.sin((t*10-0.75)*2.0944)+1;
+const qF=new THREE.Quaternion(),qA=new THREE.Quaternion(),eF=new THREE.Euler(),gv=new THREE.Vector3(),gv2=new THREE.Vector3();
+const GUN_FROM=new THREE.Vector3(0.15,1.0,-0.2),GUN_HOLD=new THREE.Vector3(0.6,1.55,-0.85);
+// timeline (seconds): 0 bubble inflates · 0.13 pop, parts spring out · 0.45 aim + pump · 0.6–1.35 spray · 1.35 squash away · 1.6 poof
+function animGun(b,a,t){const g=b.gun,u=g.userData;
+  u.bubble.visible=a<0.13;if(a<0.13){const k=a/0.13;u.bubble.scale.setScalar((0.15+k*0.95)*(1+Math.sin(a*90)*0.07));}
+  for(const m of u.parts){const k=clamp((a-0.13-m.userData.delay)/0.3,0,1),e=elastic(k),bs=m.userData.base;m.scale.set(bs.x*e+1e-4,bs.y*e+1e-4,bs.z*e+1e-4);}
+  g.position.lerpVectors(GUN_FROM,GUN_HOLD,elastic(clamp(a/0.5,0,1)));
+  const pk=clamp((a-0.13)/0.42,0,1);let sx=1,sy=1,sz=1,roll=0;
+  if(a<0.65){const w=Math.sin(pk*Math.PI*3)*(1-pk);sz=1+0.55*w;sx=sy=1-0.35*w;roll=(1-elastic(pk))*Math.PI*2;}
+  if(a>=0.45&&a<0.6)u.pump.position.z=0.38-Math.sin((a-0.45)/0.15*Math.PI*2)*0.13;else u.pump.position.z=0.38;
+  if(a>=0.6&&a<1.35){const r=Math.sin(a*70)*0.06;sz*=1-Math.abs(r);sx*=1+r*0.5;sy*=1+r*0.5;u.water.scale.y=u.water.userData.base.y*(0.75+0.3*Math.sin(a*45));}
+  if(a>=1.35){const k=clamp((a-1.35)/0.25,0,1),bump=Math.sin(k*Math.PI);sx=sy=(1+0.7*bump)*(1-k);sz=(1-0.6*bump)*(1-k);}
+  const S=1.7;g.scale.set(S*sx+1e-4,S*sy+1e-4,S*sz+1e-4);
+  eF.set(0,Math.PI,roll);qF.setFromEuler(eF);
+  if(a>=0.45&&t){g.quaternion.copy(qF);g.lookAt(gv.copy(t.mesh.position).add(gv2.set(0,1,0)));qA.copy(g.quaternion);g.quaternion.copy(qF).slerp(qA,clamp((a-0.45)/0.15,0,1));}else g.quaternion.copy(qF);}
 
 // ---------- sticker heads ----------
 function drawDefaultFace(g,r){const cx=128,cy=124;
@@ -556,9 +609,15 @@ const pGeo=new THREE.BufferGeometry();pGeo.setAttribute('position',new THREE.Buf
 const dotTex=canvasTex(64,64,(g,w,h)=>{const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(0.5,'rgba(255,255,255,.7)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);},false);
 const pts=new THREE.Points(pGeo,new THREE.PointsMaterial({size:0.55,map:dotTex,vertexColors:true,transparent:true,depthWrite:false}));pts.frustumCulled=false;scene.add(pts);
 let pIdx=0;
+const WMAX=600,wPos=new Float32Array(WMAX*3),wParts=[];for(let i=0;i<WMAX;i++){wParts.push({life:0,vx:0,vy:0,vz:0});wPos[i*3+1]=-1e4;}
+const wGeo=new THREE.BufferGeometry();wGeo.setAttribute('position',new THREE.BufferAttribute(wPos,3));
+const wPts=new THREE.Points(wGeo,new THREE.PointsMaterial({size:0.42,map:dotTex,color:0xb8ecff,transparent:true,opacity:0.55,depthWrite:false}));wPts.frustumCulled=false;scene.add(wPts);
+let wIdx=0;function emitW(x,y,z,vx,vy,vz,life){const p=wParts[wIdx];p.life=life;p.vx=vx;p.vy=vy;p.vz=vz;wPos[wIdx*3]=x;wPos[wIdx*3+1]=y;wPos[wIdx*3+2]=z;wIdx=(wIdx+1)%WMAX;}
 function emit(x,y,z,vx,vy,vz,r,g,b,life){const p=parts[pIdx];p.life=life;p.vx=vx;p.vy=vy;p.vz=vz;pPos[pIdx*3]=x;pPos[pIdx*3+1]=y;pPos[pIdx*3+2]=z;pCol[pIdx*3]=r;pCol[pIdx*3+1]=g;pCol[pIdx*3+2]=b;pIdx=(pIdx+1)%PMAX;}
 function burst(x,y,z,n,r,g,b,spd=5){for(let i=0;i<n;i++){const a=Math.random()*6.28;emit(x,y,z,Math.cos(a)*spd*Math.random(),2+Math.random()*spd,Math.sin(a)*spd*Math.random(),r,g,b,0.5+Math.random()*0.5);}}
-function updateParticles(dt){for(let i=0;i<PMAX;i++){const p=parts[i];if(p.life<=0)continue;p.life-=dt;if(p.life<=0){pPos[i*3+1]=-1e4;continue;}
+function updateParticles(dt){
+  for(let i=0;i<WMAX;i++){const p=wParts[i];if(p.life<=0)continue;p.life-=dt;if(p.life<=0){wPos[i*3+1]=-1e4;continue;}p.vy-=11*dt;wPos[i*3]+=p.vx*dt;wPos[i*3+1]+=p.vy*dt;wPos[i*3+2]+=p.vz*dt;}
+  wGeo.attributes.position.needsUpdate=true;for(let i=0;i<PMAX;i++){const p=parts[i];if(p.life<=0)continue;p.life-=dt;if(p.life<=0){pPos[i*3+1]=-1e4;continue;}
   p.vy-=11*dt;pPos[i*3]+=p.vx*dt;pPos[i*3+1]+=p.vy*dt;pPos[i*3+2]+=p.vz*dt;}
   pGeo.attributes.position.needsUpdate=true;pGeo.attributes.color.needsUpdate=true;}
 
@@ -640,7 +699,14 @@ const SFX={
   scared(o,t){const c=AU.ctx,v=c.createOscillator(),lfo=c.createOscillator(),lg=c.createGain(),g=c.createGain();v.type='triangle';v.frequency.setValueAtTime(760,t+0.1);v.frequency.exponentialRampToValueAtTime(260,t+0.95);
     lfo.frequency.value=13;lg.gain.value=70;lfo.connect(lg);lg.connect(v.frequency);env(g,t+0.1,0.02,0.22,0.85);v.connect(g);g.connect(o);v.start(t+0.1);lfo.start(t+0.1);v.stop(t+1.1);lfo.stop(t+1.1);},
   pump(o,t){for(const k of[0,0.15]){noise(o,t+k,0.05,0.5,'highpass',2200,0,0.8,0.002);osc(o,t+k,'square',190,110,0.05,0.08,0.002,1200);}},
-  spray(o,t){noise(o,t+0.25,0.75,0.35,'highpass',2800,4000,0.6,0.05);},
+  spray(o,t){noise(o,t,0.75,0.35,'highpass',2800,4000,0.6,0.05);},
+  sprayLong(o,t){noise(o,t,1.25,0.38,'highpass',2600,4200,0.6,0.05);noise(o,t,1.25,0.12,'bandpass',900,700,1,0.05);},
+  inflate(o,t){osc(o,t,'sine',180,720,0.2,0.22,0.01);},
+  pop(o,t){noise(o,t,0.06,0.6,'highpass',1800,0,0.7,0.001);const c=AU.ctx,v=c.createOscillator(),lfo=c.createOscillator(),lg=c.createGain(),g=c.createGain();
+    v.type='sine';v.frequency.setValueAtTime(220,t);v.frequency.exponentialRampToValueAtTime(520,t+0.12);lfo.frequency.setValueAtTime(18,t);lfo.frequency.linearRampToValueAtTime(6,t+0.5);lg.gain.setValueAtTime(90,t);lg.gain.exponentialRampToValueAtTime(5,t+0.5);
+    lfo.connect(lg);lg.connect(v.frequency);env(g,t,0.005,0.3,0.5);v.connect(g);g.connect(o);v.start(t);lfo.start(t);v.stop(t+0.6);lfo.stop(t+0.6);
+    [1568,2093,2637].forEach((f,k)=>osc(o,t+0.04+k*0.04,'sine',f,0,0.12,0.12));},
+  poof(o,t){noise(o,t,0.3,0.35,'lowpass',1800,300,0.7,0.01);},
   capsize(o,t){SFX.splashBig(o,t);osc(o,t+0.1,'sine',720,150,0.45,0.32);for(let k=0;k<6;k++)osc(o,t+0.25+k*0.09+Math.random()*0.04,'sine',400+Math.random()*600,900+Math.random()*400,0.06,0.15);},
   wave(o,t){noise(o,t,1.3,0.6,'lowpass',350,2400,0.8,0.35);},
   finish(o,t){[[72,0],[76,0.12],[79,0.24],[84,0.4]].forEach(([m,d])=>{osc(o,t+d,'triangle',mtof(m),0,0.35,0.22);osc(o,t+d,'sine',mtof(m)*2,0,0.2,0.08);});[60,64,67,72].forEach(m=>osc(o,t+0.4,'triangle',mtof(m),0,1.2,0.1));},
@@ -690,8 +756,8 @@ function resetRace(){
   const order=[1,2,3,4,5,0];
   order.forEach((ri,gi)=>{const r=racers[ri];const row=Math.floor(gi/3),col=gi%3;
     Object.assign(r,{u:uStart-row*7,x:[-6,0,6][col],h:0,v:0,boostT:0,boostTier:0,stunT:0,spin:0,item:null,drift:{on:false,dir:0,charge:0},finishTime:null,
-      steer:0,throttle:0,visDrift:0,roll:0,phase:Math.random()*6,lane:[-0.45,0,0.45][col],laneT:1+Math.random()*2,itemHold:0,rubber:1,cans:0,skillHold:0,scareT:0,capT:0,flip:0,gunT:0});
-    if(r.turtle){r.mesh.remove(r.turtle);r.turtle=null;}if(r.gun)r.gun.visible=false;});
+      steer:0,throttle:0,visDrift:0,roll:0,phase:Math.random()*6,lane:[-0.45,0,0.45][col],laneT:1+Math.random()*2,itemHold:0,rubber:1,cans:0,skillHold:0,scareT:0,capT:0,flip:0,gunActive:false,gunAge:0});
+    if(r.turtle){r.mesh.remove(r.turtle);r.turtle=null;}if(r.gun)r.gun.visible=false;if(r.jet)r.jet.visible=false;});
   for(const b of boxes){b.active=true;b.mesh.visible=true;}
   for(const c of cans){c.active=true;c.mesh.visible=true;}
   for(const f of flights)scene.remove(f.mesh);flights.length=0;
@@ -721,7 +787,7 @@ function castSkill(b,kind){if(b.cans<SKILL_COST||b.capT>0)return false;const t=n
   if(kind==='turtle'){const m=makeTurtle();m.position.copy(b.mesh.position).add(new THREE.Vector3(0,2.2,0));scene.add(m);
     flights.push({kind,from:b,to:t,mesh:m,t:0,dur:0.85,sx:m.position.x,sy:m.position.y,sz:m.position.z});sfx('throw',b.isPlayer?null:b.mesh.position);
     if(b.isPlayer)say(`扔出鳄龟 → ${t.name}`,0.9,true);else if(t.isPlayer)say(`${b.name} 朝你扔了只鳄龟！`,0.9,true);}
-  else{if(!b.gun){b.gun=makeWaterGun();b.gun.position.set(0.45,1.35,-0.55);b.mesh.add(b.gun);}b.gun.visible=true;b.gunT=1.0;b.gunTarget=t;b.gunHit=false;sfx('pump',b.isPlayer?null:b.mesh.position);sfx('spray',b.isPlayer?null:b.mesh.position);
+  else{if(!b.gun){b.gun=makeWaterGun();b.mesh.add(b.gun);}b.gun.visible=true;b.gunActive=true;b.gunAge=0;b.gunTarget=t;b.gunHit=false;b.gunPopped=false;b.gunPhase=0;sfx('inflate',b.isPlayer?null:b.mesh.position);
     if(b.isPlayer)say(`豪华水枪 → ${t.name}`,0.9,true);else if(t.isPlayer)say(`${b.name} 掏出了豪华水枪！`,0.9,true);}
   return true;}
 const fv=new THREE.Vector3(),fv2=new THREE.Vector3();
@@ -734,12 +800,25 @@ function updateSkills(dt){
       if(t.isPlayer){say(`被 ${f.from.name} 的鳄龟吓坏了！`,1.2,true);shake=0.5;}else if(f.from.isPlayer)say(`${t.name} 被鳄龟吓得乱晃！`,1,true);}}
   for(const b of racers){
     if(b.scareT<=0&&b.turtle){const p=b.turtle.getWorldPosition(fv);b.mesh.remove(b.turtle);b.turtle=null;burst(p.x,p.y,p.z,14,0.9,0.97,1,4);}
-    if(b.gunT>0){b.gunT-=dt;const t=b.gunTarget;if(b.gun&&t){b.gun.lookAt(fv.copy(t.mesh.position).add(fv2.set(0,1,0)));
-        if(b.gunT>0.15){const n=b.gun.localToWorld(fv2.set(0,0.05,0.9));const tx=t.mesh.position.x,ty=t.mesh.position.y+1,tz=t.mesh.position.z;const d=Math.hypot(tx-n.x,tz-n.z)||1,tt=d/32;
-          for(let k=0;k<6;k++)emit(n.x,n.y,n.z,(tx-n.x)/tt+(Math.random()-0.5)*1.5,(ty-n.y)/tt+5.5*tt+(Math.random()-0.5),(tz-n.z)/tt+(Math.random()-0.5)*1.5,0.55,0.85,1,Math.min(1.2,tt+0.1));}
-        if(!b.gunHit&&b.gunT<0.55){b.gunHit=true;if(t.capT<=0){t.capT=2.6;sfx('capsize',t.isPlayer?null:t.mesh.position);t.scareT=0;t.drift.on=false;t.boostT=0;burst(t.mesh.position.x,t.mesh.position.y+1,t.mesh.position.z,40,0.6,0.88,1,7);
-          if(t.isPlayer){say(`被 ${b.name} 喷翻船了！`,1.4,true);shake=0.6;}else if(b.isPlayer)say(`把 ${t.name} 喷翻了！`,1,true);}}}
-      if(b.gunT<=0&&b.gun)b.gun.visible=false;}}}
+    if(b.gunActive&&b.gun){b.gunAge+=dt;const a=b.gunAge,t=b.gunTarget,P=b.isPlayer?null:b.mesh.position;
+      animGun(b,a,t);
+      if(!b.gunPopped&&a>=0.13){b.gunPopped=true;const gp=b.gun.getWorldPosition(gv);
+        for(let k=0;k<28;k++){const an=Math.random()*6.28;emit(gp.x,gp.y,gp.z,Math.cos(an)*5,1+Math.random()*4,Math.sin(an)*5,1,0.82+Math.random()*0.18,0.25+Math.random()*0.6,0.45);}
+        for(let k=0;k<18;k++){const an=Math.random()*6.28;emitW(gp.x,gp.y,gp.z,Math.cos(an)*3,1+Math.random()*3,Math.sin(an)*3,0.5);}sfx('pop',P);}
+      if(b.gunPhase<1&&a>=0.45){b.gunPhase=1;sfx('pump',P);}
+      if(b.gunPhase<2&&a>=0.6){b.gunPhase=2;sfx(b.isPlayer?'sprayLong':'spray',P);}
+      if(a>=0.6&&a<1.35&&t){b.gun.updateMatrixWorld(true);const n=b.gun.localToWorld(jv0.set(0,0,1.12));const T=jv1.copy(t.mesh.position);T.y+=1;
+        const frac=clamp((a-0.6)/0.12,0,1);const curve=updateJet(b,frac,n,T,a);
+        for(let k=0;k<3;k++){const q=curve.getPoint(Math.random()*frac);emitW(q.x,q.y,q.z,(Math.random()-0.5)*2,Math.random()*1.5,(Math.random()-0.5)*2,0.45);}
+        if(frac>=1)for(let k=0;k<5;k++)emitW(T.x,T.y,T.z,(Math.random()-0.5)*7,2+Math.random()*5,(Math.random()-0.5)*7,0.6);
+        emitW(n.x,n.y,n.z,(Math.random()-0.5),0.5,(Math.random()-0.5),0.25);}
+      else if(b.jet)b.jet.visible=false;
+      if(!b.gunHit&&a>=0.85&&t){b.gunHit=true;if(t.capT<=0){t.capT=2.6;sfx('capsize',t.isPlayer?null:t.mesh.position);t.scareT=0;t.drift.on=false;t.boostT=0;
+          const tp=t.mesh.position;burst(tp.x,tp.y+1,tp.z,30,0.6,0.88,1,7);for(let k=0;k<40;k++)emitW(tp.x,tp.y+0.8,tp.z,(Math.random()-0.5)*9,3+Math.random()*6,(Math.random()-0.5)*9,0.8);
+          if(t.isPlayer){say(`被 ${b.name} 喷翻船了！`,1.4,true);shake=0.6;}else if(b.isPlayer)say(`把 ${t.name} 喷翻了！`,1,true);}}
+      if(a>=1.6){b.gunActive=false;const gp=b.gun.getWorldPosition(gv);b.gun.visible=false;if(b.jet)b.jet.visible=false;
+        for(let k=0;k<16;k++){const an=Math.random()*6.28;emit(gp.x,gp.y,gp.z,Math.cos(an)*2.5,1+Math.random()*2,Math.sin(an)*2.5,0.95,0.95,0.95,0.4);}sfx('poof',P);}}}}
+const jv0=new THREE.Vector3(),jv1=new THREE.Vector3();
 
 // ---------- AI ----------
 const sa={};
@@ -876,18 +955,25 @@ function showResults(){
 
 // ---------- camera ----------
 const camPos=new THREE.Vector3(),camLook=new THREE.Vector3();let camInit=false,fov=68;
+function cineActive(){return (state==='race'||state==='finished')&&player.gunActive&&player.gunAge<1.45&&player.gun;}
 function updateCamera(dt){
   const b=player;const px=b.mesh.position.x,py=b.wy,pz=b.mesh.position.z;
   let tx,ty,tz,lx,ly,lz;
   if(state==='menu'){const a=time*0.15;tx=px+Math.sin(a)*14;tz=pz+Math.cos(a)*14;ty=py+5;lx=px;ly=py+1;lz=pz;}
   else{tx=px-b.dirx*9;ty=py+4.3;tz=pz-b.dirz*9;lx=px+b.dirx*8;ly=py+1.2;lz=pz+b.dirz*8;}
-  const k=camInit?1-Math.exp(-dt*(state==='menu'?2:5)):1;camInit=true;
+  const cine=cineActive();let camRate=state==='menu'?2:5,tf=68+(b.boostT>0?12:0)+Math.max(0,b.v-15)*0.25;
+  if(cine){const a=b.gunAge,gp=b.gun.getWorldPosition(gv),rx=-b.dirz,rz=b.dirx;camRate=7;
+    if(a<0.55){tx=gp.x+b.dirx*4.6+rx*3.4;ty=gp.y+0.9;tz=gp.z+b.dirz*4.6+rz*3.4;lx=lerp(gp.x,px,0.35);ly=gp.y+0.1;lz=lerp(gp.z,pz,0.35);tf=50;}
+    else if(b.gunTarget){const T=b.gunTarget.mesh.position;let dx=T.x-px,dz=T.z-pz;const d=Math.hypot(dx,dz)||1;dx/=d;dz/=d;
+      const mx=(px+T.x)/2,mz=(pz+T.z)/2,sd=(-dz*b.dirx+dx*b.dirz)>0?-1:1,off=Math.min(26,d*0.75+6);tx=mx-dz*off*sd-dx*2;ty=py+3.2+d*0.08;tz=mz+dx*off*sd-dz*2;lx=mx;ly=py+1.3;lz=mz;tf=62;}}
+  document.getElementById('cine').classList.toggle('on',!!cine);document.body.classList.toggle('cine',!!cine);
+  const k=camInit?1-Math.exp(-dt*camRate):1;camInit=true;
   camPos.x=lerp(camPos.x,tx,k);camPos.y=lerp(camPos.y,ty,k);camPos.z=lerp(camPos.z,tz,k);
   camLook.x=lerp(camLook.x,lx,k);camLook.y=lerp(camLook.y,ly,k);camLook.z=lerp(camLook.z,lz,k);
   camera.position.copy(camPos);
   if(shake>0){shake=Math.max(0,shake-dt);const m=shake*0.6;camera.position.x+=(Math.random()-0.5)*m;camera.position.y+=(Math.random()-0.5)*m;}
   camera.lookAt(camLook);
-  const tf=68+(b.boostT>0?12:0)+Math.max(0,b.v-15)*0.25;fov=lerp(fov,tf,1-Math.exp(-dt*4));camera.fov=fov;camera.updateProjectionMatrix();
+  fov=lerp(fov,tf,1-Math.exp(-dt*(cine?8:4)));camera.fov=fov;camera.updateProjectionMatrix();
 }
 
 // ---------- main loop ----------
@@ -898,10 +984,13 @@ function resize(){const W=innerWidth,H=innerHeight;const rot=isTouch&&H>W;const 
 addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,200));resize();
 resetRace();
 let last=performance.now(),lastPlace=-1,lastItem='';
+let timeScale=1;
 function frame(now){
-  const dt=Math.min(0.05,(now-last)/1000);last=now;time+=dt;
+  const rdt=Math.min(0.05,(now-last)/1000);last=now;
+  const tsT=cineActive()?(player.gunAge<0.55?0.35:0.6):1;timeScale=lerp(timeScale,tsT,1-Math.exp(-rdt*14));
+  const dt=rdt*timeScale;time+=dt;
   // world animation
-  waterTex.offset.y-=dt*6/18;foamTex.offset.y-=dt*12/11;
+  waterTex.offset.y-=dt*6/18;jetTex.offset.x-=dt*6;foamTex.offset.y-=dt*12/11;
   for(const c of cans){if(!c.active){c.t-=dt;if(c.t<=0){c.active=true;c.mesh.visible=true;}}else{c.mesh.rotation.y+=dt*0.8;c.mesh.position.y=c.y+Math.sin(time*2.4+c.seed)*0.12;c.mesh.rotation.z=0.3+Math.sin(time*1.6+c.seed)*0.25;}}
   for(const bx of boxes){if(!bx.active){bx.t-=dt;if(bx.t<=0){bx.active=true;bx.mesh.visible=true;}}else{bx.mesh.rotation.y+=dt*1.6;bx.mesh.rotation.x=Math.sin(time*1.3+bx.u)*0.3;bx.mesh.position.y=bx.y+Math.sin(time*2+bx.u)*0.25;}}
   for(const r of rocks){const k=1+Math.sin(time*4+r.u)*0.12;r.ring.scale.set(r.base*k,1,r.base*k);}
@@ -930,7 +1019,7 @@ function frame(now){
   }else{itemPressed=false;}
   for(const b of racers)updateMesh(b,dt);
   updateParticles(dt);
-  updateCamera(dt);
+  updateCamera(rdt);
   audioTick();
 
   // HUD
