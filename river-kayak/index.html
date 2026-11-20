@@ -413,8 +413,8 @@ function gate(u,label,checker){const s={};sample(u,s);const grp=new THREE.Group(
   if(checker){const lt=canvasTex(512,32,(g,cw,ch)=>{for(let x=0;x<cw;x+=16)for(let y=0;y<ch;y+=16){g.fillStyle=((x+y)/16)%2?'#111':'#fff';g.fillRect(x,y,16,16);}},false);
     const line=new THREE.Mesh(new THREE.PlaneGeometry(w,2),new THREE.MeshBasicMaterial({map:lt,transparent:true,opacity:0.85,depthWrite:false}));line.rotation.x=-Math.PI/2;line.position.y=0.07;grp.add(line);}
   grp.position.set(s.x,s.y,s.z);grp.rotation.y=yaw;scene.add(grp);}
-gate(uStart+8,'起点  START',false);
-gate(uF,'终点  FINISH',true);
+gate(uStart+8,'Pinawa Start',false);
+gate(uF,'Pinawa  FINISH',true);
 
 // ---------- kayaks ----------
 function nameSprite(text,color){const tex=canvasTex(256,64,(g,w,h)=>{g.fillStyle='rgba(5,34,42,.7)';g.beginPath();g.roundRect?g.roundRect(4,8,w-8,h-16,22):g.rect(4,8,w-8,h-16);g.fill();
@@ -661,24 +661,56 @@ const I={
   clap(t,v){for(const k of[0,0.012,0.024])noise(AU.musicBus,t+k,0.09,v,'bandpass',1500,0,0.9,0.001);},
   shaker(t,v){noise(AU.musicBus,t,0.045,v,'highpass',6500,0,0.7,0.003);},
 };
-// --- song: bright island-pop loop, C – G – Am – F ---
-const BPM=124,STEP=60/BPM/4;
+// --- extra instruments for the race track ---
+Object.assign(I,{
+  lead(t,m,v){const c=AU.ctx,f=c.createBiquadFilter(),g=c.createGain();f.type='lowpass';f.frequency.setValueAtTime(4200,t);f.frequency.exponentialRampToValueAtTime(1400,t+0.2);env(g,t,0.004,v,0.22);f.connect(g);g.connect(AU.musicBus);
+    for(const[ty,dt]of[['square',0],['sawtooth',7]]){const o=c.createOscillator();o.type=ty;o.frequency.value=mtof(m);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+0.3);}},
+  bassSaw(t,m,v){const c=AU.ctx,o=c.createOscillator(),f=c.createBiquadFilter(),g=c.createGain();o.type='sawtooth';o.frequency.value=mtof(m);f.type='lowpass';f.Q.value=4;f.frequency.setValueAtTime(1800,t);f.frequency.exponentialRampToValueAtTime(260,t+0.15);
+    env(g,t,0.003,v,0.17);o.connect(f);f.connect(g);g.connect(AU.musicBus);o.start(t);o.stop(t+0.22);osc(AU.musicBus,t,'sine',mtof(m-12),0,0.16,v*0.7,0.003);},
+  brass(t,ns,v){ns.forEach(m=>{const c=AU.ctx,o=c.createOscillator(),f=c.createBiquadFilter(),g=c.createGain();o.type='sawtooth';o.frequency.value=mtof(m);o.detune.value=(Math.random()-0.5)*12;f.type='lowpass';f.frequency.setValueAtTime(3000,t);f.frequency.exponentialRampToValueAtTime(900,t+0.25);
+    env(g,t,0.01,v,0.26);o.connect(f);f.connect(g);g.connect(AU.musicBus);o.start(t);o.stop(t+0.32);});},
+  arp(t,m,v){osc(AU.musicBus,t,'triangle',mtof(m),0,0.09,v,0.002);},
+  hatC(t,v){noise(AU.musicBus,t,0.03,v,'highpass',8000,0,0.7,0.001);},
+  hatO(t,v){noise(AU.musicBus,t,0.14,v,'highpass',7000,0,0.7,0.002);},
+  snare(t,v){noise(AU.musicBus,t,0.13,v,'bandpass',1900,1200,0.8,0.001);osc(AU.musicBus,t,'triangle',230,160,0.08,v*0.6,0.001);},
+  crash(t,v){noise(AU.musicBus,t,1.1,v,'highpass',5000,3500,0.5,0.002);},
+  riser(t,len,v){noise(AU.musicBus,t,0.06,v,'bandpass',500,7000,1.5,len);},
+});
+// --- song: fast, bright summer-pop in D (C shapes +2): D – A – Bm – G ---
+const TR=2;
 const CHORDS=[[60,64,67],[59,62,67],[57,60,64],[57,60,65]],ROOTS=[48,43,45,41];
 const _=null;
-const MEL={A:[[72,_,76,_,79,_,76,_,74,_,72,_,74,_,_,_],[71,_,74,_,79,_,74,_,72,_,71,_,67,_,_,_],[72,_,76,_,81,_,79,_,76,_,74,_,72,_,76,_],[77,_,76,_,74,_,72,_,74,_,_,_,72,_,_,_]],
-  B:[[79,_,_,79,_,_,81,_,79,_,76,_,74,_,76,_],[74,_,_,74,_,_,76,_,74,_,71,_,67,_,_,_],[76,_,_,76,_,_,79,_,81,_,79,_,76,_,74,_],[72,_,74,_,76,_,77,_,79,_,_,_,_,_,_,_]]};
+const MEL={A:[[72,_,72,76,_,79,_,76,84,_,79,_,76,_,74,_],[74,_,74,79,_,83,_,79,86,_,83,_,79,_,74,_],[76,_,76,81,_,84,_,81,88,_,84,_,81,_,79,_],[77,_,77,81,_,84,_,86,84,_,81,_,79,_,76,74]],
+  B:[[79,79,_,79,_,76,_,79,_,81,_,79,76,_,72,_],[79,79,_,79,_,74,_,79,_,83,_,81,79,_,74,_],[81,81,_,81,_,76,_,81,_,84,_,83,81,_,76,_],[77,_,79,_,81,_,84,_,86,_,88,_,89,_,91,_]]};
 const FORM=['A','A','B','B'];
+function stepLen(){return 60/(AU.mode==='race'?(AU.final?162:150):128)/4;}
 function playStep(st,t){const mode=AU.mode;if(mode==='off')return;
-  const s16=st%16,bar=Math.floor(st/16),ci=bar%4,sec=FORM[Math.floor(bar/4)%4],race=mode==='race';
-  const mel=MEL[sec][ci][s16];if(mel)I.marimba(t,mel,race?0.22:0.15);
-  if(s16%4===2)CHORDS[ci].forEach((m,k)=>I.pluck(t+k*0.012,m,race?0.07:0.05));
-  if(!race&&s16%4===0)I.marimba(t,CHORDS[ci][(s16/4)%3]-12,0.08);
-  const bp={0:0,6:0,8:7,14:12};if(s16 in bp)I.bass(t,ROOTS[ci]+bp[s16],race?0.32:0.2);
-  if(race){if(s16===0||s16===8||(s16===11&&bar%2))I.kick(t,0.55);if(s16===4||s16===12)I.clap(t,0.22);I.shaker(t,s16%2?0.07:0.035);}}
+  const s16=st%16,bar=Math.floor(st/16),ci=bar%4,phrase=Math.floor(bar/4),sec=FORM[phrase%4],race=mode==='race',hot=race&&(sec==='B'||AU.final);
+  const ch=CHORDS[ci].map(m=>m+TR),root=ROOTS[ci]+TR,mel=MEL[sec][ci][s16];
+  if(!race){ // menu: lighter, still bouncy
+    if(mel)I.marimba(t,mel+TR,0.15);if(s16%4===2)ch.forEach((m,k)=>I.pluck(t+k*0.01,m,0.05));
+    if(s16%4===0)I.bass(t,root+(s16===8?7:0),0.2);if(s16%2===0)I.shaker(t,s16%4?0.05:0.025);return;}
+  // melody: marimba + bright lead layer
+  if(mel){I.marimba(t,mel+TR,0.18);I.lead(t,mel+TR,hot?0.07:0.05);}
+  // offbeat ukulele chops + brass hits
+  if(s16%4===2)ch.forEach((m,k)=>I.pluck(t+k*0.008,m,0.07));
+  if(s16===0||(s16===6&&ci%2===0)||(s16===10&&hot))I.brass(t,ch.map(m=>m+12),hot?0.05:0.035);
+  // driving 8th-note octave bass
+  if(s16%2===0)I.bassSaw(t,root+(s16%4===2?12:0),0.2);
+  // drums: four on the floor, backbeat, hats
+  if(s16%4===0)I.kick(t,0.6);if(s16===14&&ci===3)I.kick(t,0.45);
+  if(s16===4||s16===12)I.snare(t,0.32);
+  if(ci===3&&phrase%2===1&&s16>=12)I.snare(t,0.12+0.05*(s16-12));
+  if(s16%4===2)I.hatO(t,0.08);else I.hatC(t,s16%2?0.04:0.06);
+  if(bar%4===0&&s16===0)I.crash(t,0.18);
+  // sparkling 16th arpeggio when things heat up
+  if(hot){const arp=[ch[0]+12,ch[1]+12,ch[2]+12,ch[1]+24];I.arp(t,arp[s16%4],0.05);}
+  // build-up riser into each new B / A cycle
+  if(ci===3&&s16===0&&phrase%2===1)I.riser(t,16*stepLen(),0.16);}
 function musicScheduler(){const c=AU.ctx;if(!c)return;
   while(AU.next<c.currentTime+0.12){
     if(AU.want!==AU.mode&&(AU.want==='off'||AU.mode==='off'||AU.step%16===0)){AU.mode=AU.want;AU.step=0;}
-    playStep(AU.step,AU.next);AU.step++;AU.next+=STEP*(AU.step%2?1.08:0.92);}}
+    playStep(AU.step,AU.next);AU.step++;AU.next+=AU.mode==='race'?stepLen():stepLen()*(AU.step%2?1.1:0.9);}}
 // --- sound effects ---
 const _sv=new THREE.Vector3();
 const SFX={
@@ -717,7 +749,7 @@ function sfx(name,pos,vol=1){const c=AU.ctx;if(!c||!AU.sfx||AU.muted||!SFX[name]
   const out=c.createGain();out.gain.value=g;let node=out;if(c.createStereoPanner){const p=c.createStereoPanner();p.pan.value=pan;out.connect(p);node=p;}node.connect(AU.sfxBus);
   SFX[name](out,c.currentTime+0.005);setTimeout(()=>{try{node.disconnect();}catch(_){}},3500);}
 const _sa={};
-function audioTick(){const c=AU.ctx;if(!c)return;sample(player.u,_sa);const racing=state==='race'||state==='finished';
+function audioTick(){const c=AU.ctx;if(!c)return;AU.final=state==='race'&&player.u>uStart+(uF-uStart)*0.8;sample(player.u,_sa);const racing=state==='race'||state==='finished';
   AU.riverG.gain.setTargetAtTime((racing?0.07:0.035)+_sa.rf*0.16,c.currentTime,0.3);AU.riverLP.frequency.setTargetAtTime(450+_sa.rf*1400,c.currentTime,0.3);}
 const SPK_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
 const SPK_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
