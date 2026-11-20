@@ -96,7 +96,21 @@ tr.me td{color:var(--vest);font-weight:600}
 #tR{left:calc(max(16px,env(safe-area-inset-left,0px)) + 86px);bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 #tItem{right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 #tDrift{right:calc(max(16px,env(safe-area-inset-right,0px)) + 86px);bottom:calc(20px + env(safe-area-inset-bottom,0px))}
-#tBrake{right:max(16px,env(safe-area-inset-right,0px));bottom:calc(106px + env(safe-area-inset-bottom,0px));width:56px!important;height:56px!important;font-size:16px!important}
+#tBrake{left:max(16px,env(safe-area-inset-left,0px));bottom:calc(106px + env(safe-area-inset-bottom,0px));width:56px!important;height:56px!important;font-size:16px!important}
+#tTurtle{right:calc(max(16px,env(safe-area-inset-right,0px)) + 86px);bottom:calc(106px + env(safe-area-inset-bottom,0px))}
+#tGun{right:max(16px,env(safe-area-inset-right,0px));bottom:calc(106px + env(safe-area-inset-bottom,0px))}
+#touch .tbtn.skill{font-size:17px;line-height:1.05;text-align:center;opacity:.45}
+#touch .tbtn.skill.ready,.sk.ready{opacity:1;border-color:var(--vest);background:rgba(255,122,26,.35);animation:ready 1s ease-in-out infinite alternate}
+@keyframes ready{from{box-shadow:0 0 0 0 rgba(255,122,26,.0)}to{box-shadow:0 0 0 6px rgba(255,122,26,.45)}}
+.skills{display:grid;gap:6px;justify-items:start}
+.cans{display:flex;gap:5px;align-items:center;font-size:12px;color:var(--muted)}
+.cans i{width:11px;height:18px;border-radius:3px 3px 4px 4px;background:rgba(255,255,255,.14);border:1px solid var(--panel-edge);box-sizing:border-box}
+.cans i.on{background:linear-gradient(180deg,#d9e3e8 0 14%,#ff4f9a 14% 55%,#ffd23f 55% 100%);border-color:#fff}
+.skbtns{display:flex;gap:6px}
+.sk{font:inherit;font-size:13px;padding:5px 9px;border-radius:9px;border:1px solid var(--panel-edge);background:rgba(255,255,255,.06);color:var(--text);cursor:pointer;opacity:.5}
+.sk kbd{margin-left:4px;font-size:10px;padding:1px 4px}
+.sk:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
+body.touch .skbtns{display:none}
 body.touch #itemBox{bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 body.touch .itemkey .k{display:none}
 /* phone held sideways (real landscape or rotated stage): short screen, thumbs at both edges */
@@ -121,6 +135,9 @@ body.compact #touch .tbtn{width:78px;height:78px}
 body.compact #tR{left:calc(max(16px,env(safe-area-inset-left,0px)) + 92px)}
 body.compact #tDrift{right:calc(max(16px,env(safe-area-inset-right,0px)) + 92px)}
 body.compact #tBrake{bottom:108px}
+body.compact #tTurtle{right:calc(max(16px,env(safe-area-inset-right,0px)) + 92px);bottom:108px}
+body.compact #tGun{bottom:108px}
+@media (prefers-reduced-motion:reduce){#touch .tbtn.skill.ready,.sk.ready{animation:none}}
 #rotHint{display:none}
 body.rot #rotHint{display:block}
 @media (max-width:520px){
@@ -140,6 +157,8 @@ body.rot #rotHint{display:block}
   <div class="hud-box" id="itemBox">
     <div id="itemSlot">空</div>
     <div class="itemkey"><span class="k"><kbd>空格</kbd> 使用道具</span><span>漂移蓄力</span><div id="driftBar"><i></i></div></div>
+    <div class="skills"><div class="cans" id="cans">气泡水 <i></i><i></i><i></i></div>
+      <div class="skbtns"><button class="sk" id="skTurtle" type="button">扔鳄龟<kbd>Q</kbd></button><button class="sk" id="skGun" type="button">水枪<kbd>E</kbd></button></div></div>
   </div>
 </div>
 <div id="msg"></div>
@@ -150,6 +169,8 @@ body.rot #rotHint{display:block}
   <button class="tbtn" id="tDrift">漂移</button>
   <button class="tbtn" id="tItem">道具</button>
   <button class="tbtn" id="tBrake">倒划</button>
+  <button class="tbtn skill" id="tTurtle">扔<br>鳄龟</button>
+  <button class="tbtn skill" id="tGun">豪华<br>水枪</button>
 </div>
 
 <div id="menu" class="overlay">
@@ -162,13 +183,15 @@ body.rot #rotHint{display:block}
       <kbd>Shift</kbd><span>转弯时按住漂移，松开获得加速（越久越强）</span>
       <kbd>空格</kbd><span>使用道具</span>
       <kbd>S / ↓</kbd><span>倒划减速</span>
+      <kbd>Q / E</kbd><span>集满 3 罐气泡水后：Q 扔鳄龟，E 豪华水枪</span>
     </div>
-    <p class="sub" id="touchHelp" hidden>横屏游戏，自动划桨：左手按 ◀ ▶ 转向，右手按漂移和道具。<span id="rotHint">请把手机向左横过来拿（开着方向锁也能玩）。</span></p>
+    <p class="sub" id="touchHelp" hidden>横屏游戏，自动划桨：左手按 ◀ ▶ 转向，右手按漂移和道具；集满 3 罐气泡水，按「扔鳄龟」或「豪华水枪」放技能。<span id="rotHint">请把手机向左横过来拿（开着方向锁也能玩）。</span></p>
     <div class="legend">
       <span class="chip"><b>? 箱子</b> 随机道具</span>
       <span class="chip"><b>绿箭头</b> 加速带</span>
       <span class="chip"><b>白色急流</b> 水流更快</span>
       <span class="chip"><b>礁石</b> 撞上会减速</span>
+      <span class="chip"><b>气泡水罐</b> 集满 3 罐放技能</span>
     </div>
     <div class="roster-head"><span class="lab">全部 6 位选手（点头像改照片和名字）</span><button class="btn2 ghost small" id="bulkPick">一次选多张照片</button></div>
     <div class="roster" id="roster"></div>
@@ -351,6 +374,20 @@ const pads=[];
  for(let u=380;u<uF-60;u+=150+rand()*90){sample(u,s);const x=(rand()*2-1)*(s.hw-5);if(rocks.some(o=>Math.abs(o.u-u)<10&&Math.abs(o.x-x)<o.r+4))continue;
    toWorld(u,x,s);const grp=new THREE.Group();const m=new THREE.Mesh(pg,padMat);m.rotation.x=-Math.PI/2;grp.add(m);grp.position.set(s.wx,s.y+0.08,s.wz);grp.rotation.y=Math.atan2(-s.tx,-s.tz);scene.add(grp);pads.push({u,x,mesh:m});}}
 
+// floating sparkling-water cans: collect 3 to unlock a skill
+const canTexs=[['#ff4f9a','#ffd23f'],['#3fd0ff','#ffffff'],['#7ad35a','#fff3b0'],['#b04fe0','#ffd23f']].map(([a,b])=>canvasTex(128,128,(g,w,h)=>{
+  g.fillStyle=a;g.fillRect(0,0,w,h);g.fillStyle=b;g.fillRect(0,h*0.62,w,h*0.38);g.fillStyle='rgba(255,255,255,.55)';for(let i=0;i<14;i++){g.beginPath();g.arc(Math.random()*w,h*0.1+Math.random()*h*0.5,2+Math.random()*5,0,7);g.fill();}
+  g.fillStyle='#fff';g.font='bold 30px system-ui,sans-serif';g.textAlign='center';g.fillText('气泡水',w/2,h*0.5);},false));
+const canGeo=new THREE.CylinderGeometry(0.34,0.34,0.95,16);
+const canTop=new THREE.MeshStandardMaterial({color:0xd9e3e8,metalness:0.7,roughness:0.3});
+const canMats=canTexs.map(t=>[new THREE.MeshStandardMaterial({map:t,metalness:0.35,roughness:0.35,emissive:0x222222}),canTop,canTop]);
+const cans=[];
+{const s={};for(let u=120;u<uF-40;u+=34+rand()*36){sample(u,s);const n=2+Math.floor(rand()*3),x0=(rand()*2-1)*(s.hw-5),line=rand()<0.5;
+  for(let k=0;k<n;k++){const uu=u+(line?k*4:rand()*6),x=clamp(x0+(line?0:(rand()-0.5)*8),-(s.hw-3),s.hw-3);
+    if(rocks.some(o=>Math.abs(o.u-uu)<o.r+3&&Math.abs(o.x-x)<o.r+3))continue;
+    toWorld(uu,x,s);const m=new THREE.Mesh(canGeo,canMats[Math.floor(rand()*canMats.length)]);m.scale.setScalar(1.25);m.position.set(s.wx,s.y+0.45,s.wz);m.rotation.set(0.5,rand()*6,0.3);scene.add(m);
+    cans.push({u:uu,x,mesh:m,active:true,t:0,y:s.y+0.45,seed:rand()*6});}}}
+
 // start + finish gates
 function gate(u,label,checker){const s={};sample(u,s);const grp=new THREE.Group();const yaw=Math.atan2(-s.tx,-s.tz);
   const w=2*s.hw+6;const pm=new THREE.MeshLambertMaterial({color:0xf2f2f2});
@@ -404,6 +441,26 @@ function makeTube(outerColor,innerColor,vestColor){
   const head=new THREE.Sprite(new THREE.SpriteMaterial({depthWrite:true,alphaTest:0.05}));head.scale.set(1.8,1.8,1);head.position.set(0,2.4,0.72);g.add(head);
   return{group:g,paddle,head};
 }
+
+function makeTurtle(){const g=new THREE.Group();
+  const shellM=new THREE.MeshLambertMaterial({color:0x4b4a26,flatShading:true}),skinM=new THREE.MeshLambertMaterial({color:0x6b6a44,flatShading:true});
+  const shell=new THREE.Mesh(new THREE.SphereGeometry(0.75,10,6,0,Math.PI*2,0,Math.PI/2),shellM);shell.scale.set(1,0.6,1.25);g.add(shell);
+  for(const z of[-0.45,0,0.45]){const sp=new THREE.Mesh(new THREE.ConeGeometry(0.14,0.3,4),shellM);sp.position.set(0,0.48,z);g.add(sp);for(const sd of[-1,1]){const s2=sp.clone();s2.position.set(sd*0.38,0.36,z);s2.scale.setScalar(0.8);g.add(s2);}}
+  const belly=new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.7,0.12,10),new THREE.MeshLambertMaterial({color:0x9a8a50}));belly.scale.z=1.25;belly.position.y=0.02;g.add(belly);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.28,8,6),skinM);head.scale.set(1,0.85,1.2);head.position.set(0,0.12,-1.05);g.add(head);
+  const beak=new THREE.Mesh(new THREE.ConeGeometry(0.14,0.3,5),new THREE.MeshLambertMaterial({color:0x3a3a22}));beak.rotation.x=-Math.PI/2;beak.position.set(0,0.06,-1.36);g.add(beak);
+  for(const sd of[-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,4),new THREE.MeshBasicMaterial({color:0xffd23f}));eye.position.set(sd*0.15,0.22,-1.2);g.add(eye);}
+  for(const[x,z]of[[-0.6,-0.6],[0.6,-0.6],[-0.6,0.6],[0.6,0.6]]){const leg=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.14,0.42),skinM);leg.position.set(x,0,z);leg.rotation.y=x*z>0?0.6:-0.6;g.add(leg);}
+  const tail=new THREE.Mesh(new THREE.ConeGeometry(0.1,0.6,4),skinM);tail.rotation.x=Math.PI/2;tail.position.set(0,0.02,1.15);g.add(tail);
+  return g;}
+function makeWaterGun(){const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.3,1.1),new THREE.MeshStandardMaterial({color:0xff7a1a,roughness:0.4}));g.add(body);
+  const tank=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.75,12),new THREE.MeshStandardMaterial({color:0x7ad35a,transparent:true,opacity:0.85,roughness:0.2}));tank.rotation.x=Math.PI/2;tank.position.set(0,0.3,-0.05);g.add(tank);
+  const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.1,0.4,8),new THREE.MeshStandardMaterial({color:0x2f7cf6}));nozzle.rotation.x=Math.PI/2;nozzle.position.set(0,0.02,0.75);g.add(nozzle);
+  const pump=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.35,8),new THREE.MeshStandardMaterial({color:0xffd23f}));pump.rotation.x=Math.PI/2;pump.position.set(0,-0.12,0.35);g.add(pump);
+  const grip=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.4,0.18),new THREE.MeshStandardMaterial({color:0x2f7cf6}));grip.position.set(0,-0.3,-0.3);grip.rotation.x=0.3;g.add(grip);
+  const gold=new THREE.Mesh(new THREE.TorusGeometry(0.17,0.03,6,12),new THREE.MeshStandardMaterial({color:0xffcc33,metalness:0.9,roughness:0.2}));gold.position.z=0.55;g.add(gold);
+  g.scale.setScalar(1.3);return g;}
 
 // ---------- sticker heads ----------
 function drawDefaultFace(g,r){const cx=128,cy=124;
@@ -502,21 +559,22 @@ function updateParticles(dt){for(let i=0;i<PMAX;i++){const p=parts[i];if(p.life<
 const keys={};
 const isTouch=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
 const touch={l:false,r:false,drift:false,brake:false};
-let itemPressed=false;
+let itemPressed=false,skillPressed=null;
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT'){if(e.key==='Enter')document.getElementById('edOk').click();return;}if(!document.getElementById('editor').hidden)return;const k=e.key.toLowerCase();keys[k]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
-  if(k===' '&&!e.repeat)itemPressed=true;if(k==='enter'&&state==='menu')startRace();});
+  if(k===' '&&!e.repeat)itemPressed=true;if(k==='q'&&!e.repeat)skillPressed='turtle';if(k==='e'&&!e.repeat)skillPressed='gun';if(k==='enter'&&state==='menu')startRace();});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 function holdBtn(id,prop){const el=document.getElementById(id);const on=e=>{e.preventDefault();touch[prop]=true;el.classList.add('on');try{el.setPointerCapture(e.pointerId)}catch(_){}};
   const off=()=>{touch[prop]=false;el.classList.remove('on');};el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off);}
 holdBtn('tL','l');holdBtn('tR','r');holdBtn('tDrift','drift');holdBtn('tBrake','brake');
+for(const[id,sk]of[['tTurtle','turtle'],['tGun','gun'],['skTurtle','turtle'],['skGun','gun']])document.getElementById(id).addEventListener('pointerdown',e=>{e.preventDefault();skillPressed=sk;});
 document.getElementById('tItem').addEventListener('pointerdown',e=>{e.preventDefault();itemPressed=true;});
 if(isTouch){document.body.classList.add('touch');document.getElementById('touchHelp').hidden=false;document.getElementById('keyHelp').hidden=true;}
 
 // ---------- game state ----------
 const MAXV=22,ACC=15,BRAKE=20,BOOSTV=14,TURN=1.75;
 let state='menu',raceTime=0,countT=0,shake=0,resultT=0,time=0;
-const ui={pos:document.getElementById('pos'),spd:document.getElementById('spd'),time:document.getElementById('time'),slot:document.getElementById('itemSlot'),drift:document.querySelector('#driftBar i'),msg:document.getElementById('msg')};
+const ui={canPips:[...document.querySelectorAll('#cans i')],skBtns:['tTurtle','tGun','skTurtle','skGun'].map(id=>document.getElementById(id)),lastCans:-1,pos:document.getElementById('pos'),spd:document.getElementById('spd'),time:document.getElementById('time'),slot:document.getElementById('itemSlot'),drift:document.querySelector('#driftBar i'),msg:document.getElementById('msg')};
 let msgT=0;
 function say(text,dur=1.2,small=false){ui.msg.textContent=text;ui.msg.classList.add('show');ui.msg.classList.toggle('small',small);msgT=dur;}
 
@@ -525,8 +583,11 @@ function resetRace(){
   const order=[1,2,3,4,5,0];
   order.forEach((ri,gi)=>{const r=racers[ri];const row=Math.floor(gi/3),col=gi%3;
     Object.assign(r,{u:uStart-row*7,x:[-6,0,6][col],h:0,v:0,boostT:0,boostTier:0,stunT:0,spin:0,item:null,drift:{on:false,dir:0,charge:0},finishTime:null,
-      steer:0,throttle:0,visDrift:0,roll:0,phase:Math.random()*6,lane:[-0.45,0,0.45][col],laneT:1+Math.random()*2,itemHold:0,rubber:1});});
+      steer:0,throttle:0,visDrift:0,roll:0,phase:Math.random()*6,lane:[-0.45,0,0.45][col],laneT:1+Math.random()*2,itemHold:0,rubber:1,cans:0,skillHold:0,scareT:0,capT:0,flip:0,gunT:0});
+    if(r.turtle){r.mesh.remove(r.turtle);r.turtle=null;}if(r.gun)r.gun.visible=false;});
   for(const b of boxes){b.active=true;b.mesh.visible=true;}
+  for(const c of cans){c.active=true;c.mesh.visible=true;}
+  for(const f of flights)scene.remove(f.mesh);flights.length=0;
   raceTime=0;
 }
 
@@ -541,18 +602,54 @@ function useItem(b){if(!b.item)return;const it=b.item;
     if(b.isPlayer)say(hit?`大浪拍中 ${hit} 人！`:'大浪落空',1,true);it.n=0;}
   if(it.n<=0)b.item=null;}
 
+// ---------- skills (3 cans) ----------
+const SKILL_COST=3,SKILL_RANGE=70;
+const flights=[];const swp={},swq={};
+function nearestTarget(b){let best=null,bd=1e9;toWorld(b.u,b.x,swp);
+  for(const o of racers){if(o===b||o.finishTime!=null||o.capT>0)continue;toWorld(o.u,o.x,swq);const d=Math.hypot(swq.wx-swp.wx,swq.wz-swp.wz);if(d<bd){bd=d;best=o;}}
+  return bd<=SKILL_RANGE?best:null;}
+function castSkill(b,kind){if(b.cans<SKILL_COST||b.capT>0)return false;const t=nearestTarget(b);
+  if(!t){if(b.isPlayer)say('附近没有对手',0.8,true);return false;}
+  b.cans-=SKILL_COST;
+  if(kind==='turtle'){const m=makeTurtle();m.position.copy(b.mesh.position).add(new THREE.Vector3(0,2.2,0));scene.add(m);
+    flights.push({kind,from:b,to:t,mesh:m,t:0,dur:0.85,sx:m.position.x,sy:m.position.y,sz:m.position.z});
+    if(b.isPlayer)say(`扔出鳄龟 → ${t.name}`,0.9,true);else if(t.isPlayer)say(`${b.name} 朝你扔了只鳄龟！`,0.9,true);}
+  else{if(!b.gun){b.gun=makeWaterGun();b.gun.position.set(0.45,1.35,-0.55);b.mesh.add(b.gun);}b.gun.visible=true;b.gunT=1.0;b.gunTarget=t;b.gunHit=false;
+    if(b.isPlayer)say(`豪华水枪 → ${t.name}`,0.9,true);else if(t.isPlayer)say(`${b.name} 掏出了豪华水枪！`,0.9,true);}
+  return true;}
+const fv=new THREE.Vector3(),fv2=new THREE.Vector3();
+function updateSkills(dt){
+  for(let i=flights.length-1;i>=0;i--){const f=flights[i];f.t+=dt/f.dur;const tp=f.to.mesh.position;const k=Math.min(1,f.t);
+    f.mesh.position.set(lerp(f.sx,tp.x,k),lerp(f.sy,tp.y+1.4,k)+Math.sin(Math.PI*k)*5,lerp(f.sz,tp.z,k));f.mesh.rotation.x+=dt*9;f.mesh.rotation.z+=dt*5;
+    if(f.t>=1){scene.remove(f.mesh);flights.splice(i,1);const t=f.to;burst(tp.x,tp.y+1,tp.z,30,0.9,0.97,1,6);
+      if(t.capT>0)continue;t.scareT=2.6;t.v*=0.45;t.drift.on=false;t.boostT=0;
+      if(t.turtle)t.mesh.remove(t.turtle);t.turtle=f.mesh;f.mesh.rotation.set(-0.3,0.4,0.1);f.mesh.position.set(0.55,0.85,-1.05);f.mesh.scale.setScalar(0.85);t.mesh.add(f.mesh);
+      if(t.isPlayer){say(`被 ${f.from.name} 的鳄龟吓坏了！`,1.2,true);shake=0.5;}else if(f.from.isPlayer)say(`${t.name} 被鳄龟吓得乱晃！`,1,true);}}
+  for(const b of racers){
+    if(b.scareT<=0&&b.turtle){const p=b.turtle.getWorldPosition(fv);b.mesh.remove(b.turtle);b.turtle=null;burst(p.x,p.y,p.z,14,0.9,0.97,1,4);}
+    if(b.gunT>0){b.gunT-=dt;const t=b.gunTarget;if(b.gun&&t){b.gun.lookAt(fv.copy(t.mesh.position).add(fv2.set(0,1,0)));
+        if(b.gunT>0.15){const n=b.gun.localToWorld(fv2.set(0,0.05,0.9));const tx=t.mesh.position.x,ty=t.mesh.position.y+1,tz=t.mesh.position.z;const d=Math.hypot(tx-n.x,tz-n.z)||1,tt=d/32;
+          for(let k=0;k<6;k++)emit(n.x,n.y,n.z,(tx-n.x)/tt+(Math.random()-0.5)*1.5,(ty-n.y)/tt+5.5*tt+(Math.random()-0.5),(tz-n.z)/tt+(Math.random()-0.5)*1.5,0.55,0.85,1,Math.min(1.2,tt+0.1));}
+        if(!b.gunHit&&b.gunT<0.55){b.gunHit=true;if(t.capT<=0){t.capT=2.6;t.scareT=0;t.drift.on=false;t.boostT=0;burst(t.mesh.position.x,t.mesh.position.y+1,t.mesh.position.z,40,0.6,0.88,1,7);
+          if(t.isPlayer){say(`被 ${b.name} 喷翻船了！`,1.4,true);shake=0.6;}else if(b.isPlayer)say(`把 ${t.name} 喷翻了！`,1,true);}}}
+      if(b.gunT<=0&&b.gun)b.gun.visible=false;}}}
+
 // ---------- AI ----------
 const sa={};
 function aiControl(b,dt){
   sample(b.u,sa);b.laneT-=dt;if(b.laneT<0){b.lane=clamp(b.lane+(Math.random()-0.5)*0.7,-0.7,0.7);b.laneT=2+Math.random()*3;}
   let target=b.lane*(sa.hw-3);
   if(!b.item){for(const bx of boxes){if(bx.active&&bx.u>b.u+6&&bx.u<b.u+55&&Math.abs(bx.x-b.x)<9){target=bx.x;break;}}}
+  if(b.cans<SKILL_COST&&b.place!==undefined){for(const c of cans){if(c.active&&c.u>b.u+5&&c.u<b.u+35&&Math.abs(c.x-b.x)<6){target=c.x;break;}}}
   for(const p of pads){if(p.u>b.u+6&&p.u<b.u+45&&Math.abs(p.x-target)<7&&Math.random()<0.5){target=p.x;break;}}
   for(const r of rocks){const du=r.u-b.u;if(du<2||du>40)continue;if(Math.abs(r.x-target)<r.r+3.2){const lft=r.x-(r.r+3.8),rgt=r.x+(r.r+3.8);
       const lOk=lft>-(sa.hw-2),rOk=rgt<sa.hw-2;target=(lOk&&(!rOk||Math.abs(lft-b.x)<Math.abs(rgt-b.x)))?lft:rgt;}}
   target=clamp(target,-(sa.hw-2.5),sa.hw-2.5);
   const hDes=clamp(Math.atan2(target-b.x,13),-0.85,0.85);
   b.steer=clamp((hDes-b.h)*2.6,-1,1);b.throttle=b.finishTime!=null?0.25:1;b.wantDrift=false;
+  if(b.cans>=SKILL_COST&&b.finishTime==null&&b.capT<=0){b.skillHold-=dt;if(b.skillHold<=0){const t=nearestTarget(b);let ok=false;
+      if(t){toWorld(b.u,b.x,swp);toWorld(t.u,t.x,swq);if(Math.hypot(swq.wx-swp.wx,swq.wz-swp.wz)<40)ok=castSkill(b,Math.random()<0.5?'turtle':'gun');}
+      b.skillHold=ok?2+Math.random()*3:0.6;}}
   if(b.item){b.itemHold-=dt;if(b.itemHold<=0){if(b.item.id==='wave'){if(b.itemHold<-5||racers.some(o=>o!==b&&o.u-b.u>5&&o.u-b.u<60))useItem(b);}else{useItem(b);b.itemHold=0.8+Math.random();}}}
 }
 
@@ -560,14 +657,18 @@ function aiControl(b,dt){
 const sp={};
 function physics(b,dt){
   sample(b.u,sp);
-  const ctrl=b.stunT>0?0.25:1;
-  const maxV=MAXV*b.skill*b.rubber;
+  if(b.capT>0){b.capT-=dt;b.drift.on=false;b.drift.charge=0;b.v=lerp(b.v,0,1-Math.exp(-5*dt));b.h*=1-dt;b.u+=sp.cur*0.45*dt;
+    const lim=sp.hw-1.9;b.x=clamp(b.x,-lim,lim);if(b.finishTime==null&&b.u>=uF){b.finishTime=raceTime;if(b.isPlayer)onPlayerFinish();}return;}
+  const scared=b.scareT>0;if(scared)b.scareT-=dt;
+  const ctrl=b.stunT>0?0.25:(scared?0.4:1);
+  const maxV=MAXV*b.skill*b.rubber*(scared?0.55:1);
   const turnK=TURN*(0.35+0.65*Math.min(1,Math.abs(b.v)/12));
   // drift
   if(b.wantDrift&&!b.drift.on&&Math.abs(b.steer)>0.3&&b.v>10){b.drift.on=true;b.drift.dir=Math.sign(b.steer);b.drift.charge=0;}
   if(b.drift.on&&(!b.wantDrift||b.v<6||b.stunT>0)){const c=b.drift.charge;if(c>2){b.boostT=Math.max(b.boostT,1.3);b.boostTier=2;if(b.isPlayer)say('超级漂移加速！',0.7,true);}else if(c>1){b.boostT=Math.max(b.boostT,0.7);b.boostTier=1;}b.drift.on=false;b.drift.charge=0;}
   if(b.drift.on){b.h+=(b.drift.dir*0.75+b.steer*0.55)*turnK*dt*ctrl;b.drift.charge+=dt*(0.8+0.5*Math.abs(b.steer));}
   else b.h+=b.steer*turnK*dt*ctrl;
+  if(scared)b.h+=Math.sin(time*6.5+b.seed*3)*1.5*dt;
   b.h-=b.h*0.35*dt;b.h=clamp(b.h,-1.3,1.3);
   if(b.spin>0){b.spin=Math.max(0,b.spin-dt*1.2);}
   // speed
@@ -592,6 +693,10 @@ function physics(b,dt){
   // boxes
   for(const bx of boxes){if(!bx.active)continue;if(Math.abs(b.u-bx.u)<2.5&&Math.abs(b.x-bx.x)<2.5){bx.active=false;bx.mesh.visible=false;bx.t=5;
     burst(bx.mesh.position.x,bx.mesh.position.y,bx.mesh.position.z,20,1,0.8,0.3,4);if(!b.item)giveItem(b,b.place||0);}}
+  // cans
+  for(const c of cans){if(!c.active)continue;if(Math.abs(b.u-c.u)<2.3&&Math.abs(b.x-c.x)<2.3){c.active=false;c.mesh.visible=false;c.t=7;
+    if(b.cans<SKILL_COST){b.cans++;if(b.isPlayer)say(b.cans>=SKILL_COST?'技能就绪！':`气泡水 ${b.cans}/${SKILL_COST}`,0.6,true);if(b.cans>=SKILL_COST&&!b.isPlayer)b.skillHold=1+Math.random()*3;}
+    burst(c.mesh.position.x,c.mesh.position.y,c.mesh.position.z,12,0.8,0.95,1,3);}}
   // pads
   for(const p of pads){if(Math.abs(b.u-p.u)<4.4&&Math.abs(b.x-p.x)<2.5){if(b.boostT<0.9){b.boostT=0.9;b.boostTier=1;}}}
   // finish
@@ -610,13 +715,17 @@ function updateMesh(b,dt){
   const c=Math.cos(b.h),s=Math.sin(b.h);b.dirx=sv.tx*c+rx*s;b.dirz=sv.tz*c+rz*s;b.rx=rx;b.rz=rz;b.wy=sv.y;
   b.visDrift=lerp(b.visDrift,b.drift.on?b.drift.dir*0.42:0,1-Math.exp(-8*dt));
   b.roll=lerp(b.roll,-b.steer*0.14-(b.drift.on?b.drift.dir*0.12:0),1-Math.exp(-6*dt));
-  b.mesh.rotation.set(Math.sin(time*2.2+b.seed)*0.03*(1+sv.rf*3),Math.atan2(-b.dirx,-b.dirz)-b.visDrift+b.spin*Math.PI*2+Math.sin(time*0.9+b.seed)*0.1,b.roll+Math.sin(time*1.7+b.seed)*0.03);
+  b.flip=lerp(b.flip||0,b.capT>0.45?Math.PI:0,1-Math.exp(-(b.capT>0.45?9:6)*dt));
+  const sk=Math.min(1,b.scareT);
+  b.mesh.rotation.set(Math.sin(time*2.2+b.seed)*0.03*(1+sv.rf*3)+Math.sin(time*11+b.seed)*0.22*sk,Math.atan2(-b.dirx,-b.dirz)-b.visDrift+b.spin*Math.PI*2+Math.sin(time*0.9+b.seed)*0.1+Math.sin(time*7+b.seed)*0.35*sk,b.roll+Math.sin(time*1.7+b.seed)*0.03+Math.sin(time*14+b.seed)*0.38*sk+b.flip);
+  if(b.flip>0.3)b.mesh.position.y+=0.25;
+  if(b.capT>0&&Math.random()<dt*20)emit(px+(Math.random()-0.5)*2.5,sv.y+0.3,pz+(Math.random()-0.5)*2.5,0,2+Math.random()*2,0,1,1,1,0.5);
   const stroke=state==='race'||state==='finished'?Math.max(0.25,b.throttle):0.15;
   b.phase+=dt*(3.2+Math.max(0,b.v)*0.16)*stroke;
   b.paddle.rotation.z=Math.sin(b.phase)*0.55;b.paddle.rotation.y=Math.cos(b.phase)*0.4;
   // spray
   const near=Math.hypot(px-camera.position.x,pz-camera.position.z)<70;
-  if(near&&(state==='race'||state==='finished')){const spd=b.v+sv.cur;
+  if(near&&b.capT<=0&&(state==='race'||state==='finished')){const spd=b.v+sv.cur;
     if(spd>12&&Math.random()<dt*(18+sv.rf*30)){for(const sd of[-1,1])emit(px-b.dirx*1.6+rx*sd*0.7,sv.y+0.2,pz-b.dirz*1.6+rz*sd*0.7,rx*sd*1.6-b.dirx*2,1.5+Math.random()*2,rz*sd*1.6-b.dirz*2,0.92,0.98,1,0.5);}
     if(Math.sin(b.phase)>0.9&&Math.random()<0.5){const sd=Math.sin(b.phase*0.5)>0?1:-1;emit(px+rx*sd*1.6,sv.y+0.3,pz+rz*sd*1.6,rx*sd,2.2,rz*sd,0.9,0.97,1,0.45);}
     if(b.drift.on&&b.drift.charge>0.3){const col=b.drift.charge>2?[1,0.55,0.15]:b.drift.charge>1?[0.3,0.82,1]:[0.95,0.95,0.95];
@@ -685,6 +794,7 @@ function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;time+=dt;
   // world animation
   waterTex.offset.y-=dt*6/18;foamTex.offset.y-=dt*12/11;
+  for(const c of cans){if(!c.active){c.t-=dt;if(c.t<=0){c.active=true;c.mesh.visible=true;}}else{c.mesh.rotation.y+=dt*0.8;c.mesh.position.y=c.y+Math.sin(time*2.4+c.seed)*0.12;c.mesh.rotation.z=0.3+Math.sin(time*1.6+c.seed)*0.25;}}
   for(const bx of boxes){if(!bx.active){bx.t-=dt;if(bx.t<=0){bx.active=true;bx.mesh.visible=true;}}else{bx.mesh.rotation.y+=dt*1.6;bx.mesh.rotation.x=Math.sin(time*1.3+bx.u)*0.3;bx.mesh.position.y=bx.y+Math.sin(time*2+bx.u)*0.25;}}
   for(const r of rocks){const k=1+Math.sin(time*4+r.u)*0.12;r.ring.scale.set(r.base*k,1,r.base*k);}
 
@@ -700,12 +810,14 @@ function frame(now){
       player.steer=lerp(player.steer,st,1-Math.exp(-dt*10));
       player.wantDrift=!!(keys['shift']||touch.drift);
       if(itemPressed)useItem(player);
+      if(skillPressed)castSkill(player,skillPressed);
     }else aiControl(player,dt);
-    itemPressed=false;
+    itemPressed=false;skillPressed=null;
     const st=standings();st.forEach((r,i)=>r.place=i);
     for(const b of racers){if(!b.isPlayer){b.rubber=1+clamp((player.u-b.u)/350,-0.07,0.1);aiControl(b,dt);}else b.rubber=1;}
     for(const b of racers)physics(b,dt);
     boatCollisions();
+    updateSkills(dt);
     if(state==='finished'){resultT-=dt;if(resultT<=0||racers.every(r=>r.finishTime!=null))showResults();}
   }else{itemPressed=false;}
   for(const b of racers)updateMesh(b,dt);
@@ -719,6 +831,7 @@ function frame(now){
     ui.time.textContent=fmt(raceTime);
     const itKey=player.item?player.item.id+player.item.n:'';
     if(itKey!==lastItem){lastItem=itKey;if(player.item){const d=ITEMS[player.item.id];ui.slot.innerHTML=player.item.id==='turbo3'?`加速<br>×${player.item.n}`:d.label;ui.slot.className=d.cls;}else{ui.slot.textContent='空';ui.slot.className='';}}
+    if(player.cans!==ui.lastCans){ui.lastCans=player.cans;ui.canPips.forEach((el,i)=>el.classList.toggle('on',i<player.cans));const rd=player.cans>=SKILL_COST;for(const el of ui.skBtns)el.classList.toggle('ready',rd);}
     const c=player.drift.on?player.drift.charge:0;ui.drift.style.width=Math.min(100,c/2*100)+'%';ui.drift.style.background=c>2?'#ff7a1a':c>1?'#3fd0ff':'#a6d2d6';
     for(const r of racers)r.dot.style.left=clamp((r.u-uStart)/(uF-uStart),0,1)*100+'%';
     drawMap();
