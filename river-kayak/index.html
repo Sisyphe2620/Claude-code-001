@@ -105,6 +105,13 @@ td{padding:7px 4px;border-bottom:1px solid var(--panel-edge)}
 td:last-child{text-align:right}
 tr.me td{color:var(--vest);font-weight:600}
 .sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.rname{display:inline-flex;align-items:center;gap:8px}
+.rav{width:32px;height:32px;flex:none;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+body.compact .rav{width:24px;height:24px}
+body.compact #result .card{gap:6px;padding:10px 18px 12px}
+body.compact #result .place{font-size:32px}
+body.compact #result td{padding:2px 4px}
+body.compact #result .exit{min-height:32px;padding:3px 12px 3px 8px;font-size:15px}
 #touch .tbtn{position:fixed;width:74px;height:74px;border-radius:50%;background:var(--panel);border:2px solid var(--panel-edge);color:var(--text);font-family:var(--display);font-size:20px;display:grid;place-items:center;touch-action:none}
 #touch .tbtn.on{background:rgba(63,208,255,.35);border-color:var(--boost)}
 #tL{left:max(16px,env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px))}
@@ -640,7 +647,7 @@ racers.slice().reverse().forEach(r=>{const d=document.createElement('div');d.cla
 const rosterEl=document.getElementById('roster');
 racers.forEach(r=>{const b=document.createElement('button');b.className='slot'+(r.isPlayer?' me':'');b.type='button';b.innerHTML='<img alt=""><span></span>';b.addEventListener('click',()=>openEditor(r));rosterEl.appendChild(b);r.slot=b;});
 function refreshLook(r){const c=makeSticker(r);if(r.headTex)r.headTex.dispose();r.headTex=new THREE.CanvasTexture(c);r.head.material.map=r.headTex;r.head.material.needsUpdate=true;
-  const url=c.toDataURL('image/png');r.dot.style.backgroundImage=`url(${url})`;r.slot.querySelector('img').src=url;r.slot.querySelector('span').textContent=r.name;r.slot.setAttribute('aria-label','编辑选手 '+r.name);
+  const url=c.toDataURL('image/png');r.stickerURL=url;r.dot.style.backgroundImage=`url(${url})`;r.slot.querySelector('img').src=url;r.slot.querySelector('span').textContent=r.name;r.slot.setAttribute('aria-label','编辑选手 '+r.name);
   if(r.label&&r.label.userData.name!==r.name){const old=r.label;r.label=nameSprite(r.name,r.css);r.label.userData.name=r.name;r.mesh.remove(old);old.material.map.dispose();r.mesh.add(r.label);}}
 const STORE='river-tube-avatars-v1';
 function saveStore(){try{const o={};racers.forEach(r=>{o[r.idx]={name:r.name,photo:r.photoData};});localStorage.setItem(STORE,JSON.stringify(o));}catch(_){}}
@@ -1106,7 +1113,7 @@ function onPlayerFinish(){state='finished';resultT=3.5;const place=standings().i
 function standings(){return racers.slice().sort((a,b)=>{if(a.finishTime!=null&&b.finishTime!=null)return a.finishTime-b.finishTime;if(a.finishTime!=null)return -1;if(b.finishTime!=null)return 1;return b.u-a.u;});}
 const fmt=t=>{const m=Math.floor(t/60),s=t-m*60;return`${m}:${s<10?'0':''}${s.toFixed(2)}`;};
 function showResults(){
-  const st=standings();const rows=st.map((r,i)=>{const t=r.finishTime!=null?r.finishTime:raceTime+(uF-r.u)/26;return`<tr class="${r.isPlayer?'me':''}"><td>${i+1}</td><td><span class="sw" style="background:${r.css}"></span>${r.name}</td><td>${r.finishTime!=null?'':'约 '}${fmt(t)}</td></tr>`;}).join('');
+  const st=standings();const rows=st.map((r,i)=>{const t=r.finishTime!=null?r.finishTime:raceTime+(uF-r.u)/26;return`<tr class="${r.isPlayer?'me':''}"><td>${i+1}</td><td><span class="rname"><img class="rav" src="${r.stickerURL||''}" alt="">${r.name}</span></td><td>${r.finishTime!=null?'':'约 '}${fmt(t)}</td></tr>`;}).join('');
   document.getElementById('resTable').innerHTML=rows;document.getElementById('placeTxt').textContent=`第 ${st.indexOf(player)+1} 名`;
   result.hidden=false;touchEl.hidden=true;state='results';setMusic('menu');msgT=0;ui.msg.classList.remove('show');setTimeout(()=>document.getElementById('againBtn').focus(),50);}
 
