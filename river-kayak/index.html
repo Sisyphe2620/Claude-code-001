@@ -99,18 +99,23 @@ kbd{font-family:var(--body);font-size:12px;padding:3px 7px;border-radius:6px;bac
 .go{font-family:var(--display);font-size:26px;border:0;border-radius:14px;padding:14px 20px;background:var(--vest);color:#2a0d00;cursor:pointer;box-shadow:0 5px 0 #b44a00}
 .go:active{transform:translateY(3px);box-shadow:0 2px 0 #b44a00}
 .go:focus-visible,.tbtn:focus-visible{outline:3px solid var(--boost);outline-offset:3px}
-.place{font-family:var(--display);font-size:72px;line-height:1;color:var(--vest)}
+.place{font-family:var(--display);font-size:60px;line-height:1;color:var(--vest)}
 table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
 td{padding:7px 4px;border-bottom:1px solid var(--panel-edge)}
 td:last-child{text-align:right}
-tr.me td{color:var(--vest);font-weight:600}
+tr.me td{color:#fff;font-weight:700;font-size:17px;background:rgba(255,122,26,.82);border-bottom-color:transparent;text-shadow:0 1px 2px rgba(80,25,0,.5)}
+tr.me td:first-child{border-radius:12px 0 0 12px}tr.me td:last-child{border-radius:0 12px 12px 0}
+tr.me .rav{outline:3px solid #fff;outline-offset:-1px;border-radius:50%;transform:scale(1.08)}
+.res-title{display:grid;gap:4px}
 .sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
 .rname{display:inline-flex;align-items:center;gap:8px}
-.rav{width:32px;height:32px;flex:none;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
-body.compact .rav{width:24px;height:24px}
+.rav{width:48px;height:48px;flex:none;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+body.compact .rav{width:34px;height:34px}
+body.compact #result table{font-size:14px}
+body.compact #result tr.me td{font-size:15px}
 body.compact #result .card{gap:6px;padding:10px 18px 12px}
-body.compact #result .place{font-size:32px}
-body.compact #result td{padding:2px 4px}
+body.compact #result .place{font-size:30px}
+body.compact #result td{padding:1px 4px}
 body.compact #result .exit{min-height:32px;padding:3px 12px 3px 8px;font-size:15px}
 #touch .tbtn{position:fixed;width:74px;height:74px;border-radius:50%;background:var(--panel);border:2px solid var(--panel-edge);color:var(--text);font-family:var(--display);font-size:20px;display:grid;place-items:center;touch-action:none}
 #touch .tbtn.on{background:rgba(63,208,255,.35);border-color:var(--boost)}
@@ -253,8 +258,7 @@ body.compact .ld-info{padding-block:0 14px;gap:6px}body.compact .ld-bar{height:1
 
 <div id="result" class="overlay" hidden>
   <div class="card">
-    <div class="res-head"><div class="lab">比赛结束</div><button class="exit" id="exitBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>退出</button></div>
-    <div class="place" id="placeTxt">第 1 名</div>
+    <div class="res-head"><div class="res-title"><div class="lab">比赛结束</div><div class="place" id="placeTxt">第 1 名</div></div><button class="exit" id="exitBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>退出</button></div>
     <table id="resTable"></table>
     <button class="go" id="againBtn">再来一局</button>
   </div>
