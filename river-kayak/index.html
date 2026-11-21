@@ -1100,7 +1100,7 @@ function tryLandscape(){if(!isTouch)return;try{const el=document.documentElement
 function startRace(){unlockAudio();sfx('click');setMusic('off');tryLandscape();resetRace();ui.wasBoost=false;ui.dTier=0;state='countdown';countT=3.6;menu.hidden=true;result.hidden=true;hud.hidden=false;touchEl.hidden=!isTouch;}
 document.getElementById('startBtn').addEventListener('click',startRace);
 document.getElementById('againBtn').addEventListener('click',startRace);
-function exitToMenu(){sfx('click');resetRace();state='menu';result.hidden=true;hud.hidden=true;touchEl.hidden=true;menu.hidden=false;camInit=false;setMusic('menu');document.body.classList.remove('cine');setTimeout(()=>document.getElementById('startBtn').focus(),50);}
+function exitToMenu(){sfx('click');msgT=0;ui.msg.classList.remove('show');resetRace();state='menu';result.hidden=true;hud.hidden=true;touchEl.hidden=true;menu.hidden=false;camInit=false;setMusic('menu');document.body.classList.remove('cine');setTimeout(()=>document.getElementById('startBtn').focus(),50);}
 document.getElementById('exitBtn').addEventListener('click',exitToMenu);
 function onPlayerFinish(){state='finished';resultT=3.5;const place=standings().indexOf(player)+1;setMusic('off');sfx(place===1?'win':'finish');say(place===1?'冠军！':`第 ${place} 名`,2.5);}
 function standings(){return racers.slice().sort((a,b)=>{if(a.finishTime!=null&&b.finishTime!=null)return a.finishTime-b.finishTime;if(a.finishTime!=null)return -1;if(b.finishTime!=null)return 1;return b.u-a.u;});}
@@ -1108,7 +1108,7 @@ const fmt=t=>{const m=Math.floor(t/60),s=t-m*60;return`${m}:${s<10?'0':''}${s.to
 function showResults(){
   const st=standings();const rows=st.map((r,i)=>{const t=r.finishTime!=null?r.finishTime:raceTime+(uF-r.u)/26;return`<tr class="${r.isPlayer?'me':''}"><td>${i+1}</td><td><span class="sw" style="background:${r.css}"></span>${r.name}</td><td>${r.finishTime!=null?'':'约 '}${fmt(t)}</td></tr>`;}).join('');
   document.getElementById('resTable').innerHTML=rows;document.getElementById('placeTxt').textContent=`第 ${st.indexOf(player)+1} 名`;
-  result.hidden=false;touchEl.hidden=true;state='results';setMusic('menu');setTimeout(()=>document.getElementById('againBtn').focus(),50);}
+  result.hidden=false;touchEl.hidden=true;state='results';setMusic('menu');msgT=0;ui.msg.classList.remove('show');setTimeout(()=>document.getElementById('againBtn').focus(),50);}
 
 // ---------- camera ----------
 const camPos=new THREE.Vector3(),camLook=new THREE.Vector3();let camInit=false,fov=68;
