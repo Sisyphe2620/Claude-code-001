@@ -38,6 +38,7 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 .mute:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
 .soundrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .soundrow .lab{margin-right:auto}
+.hint-strong{color:var(--vest);font-weight:700;letter-spacing:.04em}
 #track{position:fixed;top:calc(20px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(36vw,360px);height:10px;border-radius:6px;background:rgba(5,34,42,.6);border:1px solid var(--panel-edge)}
 #track .flag{position:absolute;right:-6px;top:-7px;width:22px;height:22px;border-radius:4px;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/11px 11px;border:1px solid #fff}
 #track .dot{position:absolute;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background-size:cover;background-position:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
@@ -101,6 +102,7 @@ tr.me td{color:var(--vest);font-weight:600}
 #touch .tbtn{position:fixed;width:74px;height:74px;border-radius:50%;background:var(--panel);border:2px solid var(--panel-edge);color:var(--text);font-family:var(--display);font-size:20px;display:grid;place-items:center;touch-action:none}
 #touch .tbtn.on{background:rgba(63,208,255,.35);border-color:var(--boost)}
 #tL{left:max(16px,env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+#touch #tL,#touch #tR{border-radius:20px}
 #tR{left:calc(max(16px,env(safe-area-inset-left,0px)) + 86px);bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 #tBrake{left:max(16px,env(safe-area-inset-left,0px));bottom:calc(200px + env(safe-area-inset-bottom,0px));width:70px!important;height:46px!important;border-radius:23px!important;font-size:16px!important}
 #tTurtle{right:calc(max(16px,env(safe-area-inset-right,0px)) + 92px);bottom:calc(20px + env(safe-area-inset-bottom,0px))}
@@ -283,7 +285,7 @@ body.rot #rotHint{display:block}
       <span class="chip"><b>礁石</b> 撞上会减速</span>
       <span class="chip"><b>气泡水罐</b> 集满 3 罐放技能</span>
     </div>
-    <div class="roster-head"><span class="lab">全部 6 位选手（点头像改照片和名字）</span><button class="btn2 ghost small" id="bulkPick">一次选多张照片</button></div>
+    <div class="roster-head"><span class="lab">全部 6 位选手<b class="hint-strong">（点头像改照片和名字）</b></span><button class="btn2 ghost small" id="bulkPick">一次选多张照片</button></div>
     <div class="roster" id="roster"></div>
     <p class="sub small" id="bulkMsg" hidden></p>
     <div class="soundrow"><span class="lab">声音</span><button class="btn2 ghost small" id="musicBtn" type="button">音乐：开</button><button class="btn2 ghost small" id="sfxBtn" type="button">音效：开</button></div>
