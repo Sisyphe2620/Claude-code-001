@@ -1,5 +1,6 @@
 <title>Pinawa Float Race</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preload" as="image" href="loading.webp" type="image/webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap">
 <style>
@@ -160,87 +161,32 @@ body.rot #rotHint{display:block}
   body:not(.compact) #track{top:calc(150px + env(safe-area-inset-top,0px));width:70vw}
 }
 @media (prefers-reduced-motion:reduce){#msg{transition:none}}
-/* ---------- loading screen: sky, a bobbing river tube, flowing waves, river-shaped progress bar ---------- */
-#loader{--sky1:#9fd8ea;--sky2:#d9f3f7;--w1:#2a8fa8;--foam:#e9fbff;--ink2:#06323d;
-  position:fixed;inset:0;z-index:30;overflow:hidden;container-type:size;color:#fff;font-family:var(--body);
-  background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 55%,var(--w1) 55.1%);transition:opacity .6s ease,transform .6s ease}
-#loader.out{opacity:0;transform:translateY(-6%);pointer-events:none}
-.ld-hills{position:absolute;left:0;right:0;bottom:44%;height:22%;pointer-events:none}
-.ld-hills svg{width:100%;height:100%;display:block}
-.ld-title{position:absolute;left:0;right:0;top:7%;top:7cqh;margin:0;text-align:center;font-family:var(--display);font-weight:400;
-  font-size:44px;font-size:clamp(28px,min(9cqw,12cqh),72px);line-height:1;color:#fff;text-shadow:0 4px 0 rgba(6,50,61,.35),0 0 24px rgba(255,255,255,.35);animation:ldTitle 3s ease-in-out infinite alternate}
-.ld-title em{font-style:normal;color:var(--vest)}
-.ld-sub{display:block;margin-top:8px;font-family:var(--body);font-size:13px;letter-spacing:.3em;color:var(--ink2);text-shadow:none;opacity:.75}
-.ld-scene{position:absolute;left:50%;bottom:36%;width:220px;width:min(46cqw,40cqh);transform:translateX(-50%);aspect-ratio:200/170}
-.ld-tube{width:100%;height:100%;display:block;animation:ldBob 2.4s ease-in-out infinite alternate;transform-origin:50% 80%}
-.ld-paddle{transform-box:fill-box;transform-origin:50% 50%;animation:ldPaddle 1.2s ease-in-out infinite alternate}
-.ld-can{position:absolute;width:5.2%;width:min(5.2cqw,9cqh);bottom:34%;animation:ldBob 2s ease-in-out infinite alternate}
-.ld-can svg{width:100%;display:block;overflow:visible}
-.ld-can.c1{left:20%;animation-delay:-.6s}.ld-can.c2{right:21%;bottom:35%;animation-delay:-1.3s}.ld-can.c3{left:31%;bottom:30%;width:min(4.2cqw,7cqh);animation-delay:-.2s}
-.ld-waves{position:absolute;left:0;right:0;bottom:0;height:46%}
-.ld-wave{position:absolute;left:0;width:200%;height:100%;display:block}
-.ld-wave.a{top:0;animation:ldFlow 9s linear infinite}
-.ld-wave.b{top:14%;animation:ldFlow 6s linear infinite;opacity:.95}
-.ld-wave.c{top:30%;animation:ldFlow 4s linear infinite}
-.ld-info{position:absolute;left:0;right:0;bottom:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  padding-block:0 calc(14px + env(safe-area-inset-bottom,0px));display:grid;justify-items:center;gap:8px}
-.ld-bar{position:relative;width:min(520px,82cqw);height:16px;border-radius:999px;background:rgba(3,40,50,.55);border:2px solid rgba(233,251,255,.55)}
-.ld-fill{position:absolute;inset:2px auto 2px 2px;width:0;border-radius:999px;background:repeating-linear-gradient(115deg,#7fe3ff 0 10px,#3fd0ff 10px 20px);background-size:44px 100%;animation:ldStripes .8s linear infinite}
-.ld-mark{position:absolute;top:50%;left:0;width:34px;height:34px;margin:-19px 0 0 -17px}
-.ld-mark svg{width:100%;display:block;animation:ldBob 1.2s ease-in-out infinite alternate}
-.ld-row{width:min(520px,82cqw);display:flex;justify-content:space-between;gap:12px;font-size:14px;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-#ldPct{font-family:var(--display);font-size:18px}
-.ld-tip{margin:0;max-width:min(560px,90cqw);text-align:center;font-size:13px;line-height:1.5;color:var(--foam);opacity:.9;min-height:1.5em;transition:opacity .3s}
-.ld-tip b{color:#ffd23f;font-weight:600}
+/* ---------- loading screen: full-bleed key art, one progress bar on the calm water at the bottom ---------- */
+#loader{position:fixed;inset:0;z-index:30;overflow:hidden;background:#2f7fb0 url("loading.webp") center top/cover no-repeat;color:#fff;font-family:var(--body);
+  transition:opacity .6s ease,transform .6s ease}
+#loader.out{opacity:0;transform:scale(1.04);pointer-events:none}
+#loader::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;background:linear-gradient(180deg,rgba(4,34,52,0) 0%,rgba(4,34,52,.55) 70%,rgba(4,34,52,.7) 100%);pointer-events:none}
+.ld-info{position:absolute;left:0;right:0;bottom:0;z-index:1;display:grid;justify-items:center;gap:8px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(22px + env(safe-area-inset-bottom,0px))}
+.ld-row{width:min(560px,72%);display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-family:var(--display);text-shadow:0 2px 0 rgba(6,40,56,.8),0 0 10px rgba(0,0,0,.35)}
+#ldStage{font-size:16px;letter-spacing:.04em}
+#ldPct{font-size:22px;font-variant-numeric:tabular-nums}
+.ld-bar{position:relative;width:min(560px,72%);height:20px;border-radius:999px;background:rgba(4,30,44,.6);border:3px solid #fff;box-shadow:0 3px 0 rgba(6,40,56,.6),0 0 18px rgba(255,255,255,.25);overflow:hidden}
+.ld-fill{position:absolute;inset:0 auto 0 0;width:0;border-radius:999px;
+  background:repeating-linear-gradient(115deg,rgba(255,255,255,.28) 0 10px,rgba(255,255,255,0) 10px 20px),linear-gradient(180deg,#ffb347,#ff7a1a 60%,#e85d00);
+  background-size:44px 100%,100% 100%;animation:ldStripes .8s linear infinite;box-shadow:inset 0 3px 0 rgba(255,255,255,.35)}
 #ldRetry{font-family:var(--display);font-size:18px;border:0;border-radius:12px;padding:8px 18px;background:var(--vest);color:#2a0d00;cursor:pointer;box-shadow:0 4px 0 #b44a00}
 #ldRetry:focus-visible{outline:3px solid #fff;outline-offset:3px}
-@container (max-height:430px){.ld-title{top:5cqh}.ld-sub{display:none}.ld-scene{bottom:38%;width:min(34cqw,46cqh)}.ld-tip{font-size:12px}.ld-info{gap:5px}}
-@keyframes ldBob{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-7%) rotate(3deg)}}
-@keyframes ldPaddle{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
-@keyframes ldFlow{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes ldStripes{from{background-position:0 0}to{background-position:44px 0}}
-@keyframes ldTitle{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+body.compact .ld-info{padding-block:0 14px;gap:6px}body.compact .ld-bar{height:16px}body.compact #ldPct{font-size:18px}body.compact #ldStage{font-size:14px}
+@keyframes ldStripes{from{background-position:0 0,0 0}to{background-position:44px 0,0 0}}
 @media (prefers-reduced-motion:reduce){#loader *{animation:none!important}}
 </style>
 
 <div id="stage">
-<div id="loader" role="status" aria-live="polite" aria-label="游戏加载中">
-  <div class="ld-hills"><svg viewBox="0 0 800 160" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0,160 L0,90 C80,40 150,60 220,80 C300,30 380,20 460,70 C540,40 620,30 700,70 C740,55 770,60 800,70 L800,160 Z" fill="#5c8f7f"/>
-    <path d="M0,160 L0,120 C60,95 120,100 180,115 C260,85 330,90 400,112 C480,80 560,85 640,110 C700,95 760,98 800,105 L800,160 Z" fill="#3f7d4a"/>
-    <g fill="#2c6b3a"><path d="M60,118 l14,-40 l14,40z"/><path d="M95,120 l10,-30 l10,30z"/><path d="M640,112 l16,-46 l16,46z"/><path d="M680,116 l11,-32 l11,32z"/><path d="M300,116 l12,-34 l12,34z"/><path d="M510,114 l13,-38 l13,38z"/></g></svg></div>
-  <h2 class="ld-title">Pinawa <em>Float</em> Race<span class="ld-sub">激 流 漂 流 大 赛</span></h2>
-  <div class="ld-waves" aria-hidden="true">
-    <svg class="ld-wave a" viewBox="0 0 1600 200" preserveAspectRatio="none"><path data-wave="16" fill="#2a8fa8"/></svg>
-    <svg class="ld-wave b" viewBox="0 0 1600 200" preserveAspectRatio="none"><path data-wave="22" fill="#1f7891"/></svg>
-    <svg class="ld-wave c" viewBox="0 0 1600 200" preserveAspectRatio="none"><path data-wave="12" fill="#13627a"/></svg>
-  </div>
-  <div class="ld-can c1" aria-hidden="true"><svg viewBox="0 0 40 70"><circle cx="20" cy="36" r="24" fill="#ff1f8f" opacity=".2"/><rect x="8" y="12" width="24" height="44" rx="6" fill="#ff1f8f"/><rect x="8" y="36" width="24" height="12" fill="#fff"/><ellipse cx="20" cy="13" rx="12" ry="4" fill="#dfe8ec"/></svg></div>
-  <div class="ld-can c2" aria-hidden="true"><svg viewBox="0 0 40 70"><circle cx="20" cy="36" r="24" fill="#00d8ff" opacity=".2"/><rect x="8" y="12" width="24" height="44" rx="6" fill="#00d8ff"/><rect x="8" y="36" width="24" height="12" fill="#fff"/><ellipse cx="20" cy="13" rx="12" ry="4" fill="#dfe8ec"/></svg></div>
-  <div class="ld-can c3" aria-hidden="true"><svg viewBox="0 0 40 70"><circle cx="20" cy="36" r="24" fill="#a8ff00" opacity=".2"/><rect x="8" y="12" width="24" height="44" rx="6" fill="#a8ff00"/><rect x="8" y="36" width="24" height="12" fill="#fff"/><ellipse cx="20" cy="13" rx="12" ry="4" fill="#dfe8ec"/></svg></div>
-  <div class="ld-scene" aria-hidden="true">
-    <svg class="ld-tube" viewBox="0 0 200 170">
-      <ellipse cx="100" cy="150" rx="92" ry="12" fill="#e9fbff" opacity=".45"/>
-      <ellipse cx="100" cy="122" rx="78" ry="28" fill="none" stroke="#e3262e" stroke-width="30"/>
-      <ellipse cx="100" cy="122" rx="52" ry="15" fill="#2f7cf6"/>
-      <path d="M70,124 C70,96 76,78 100,76 C124,78 130,96 130,124 Z" fill="#ffd23f"/>
-      <path d="M74,98 H126 M72,112 H128" stroke="#1d2326" stroke-width="5"/>
-      <path d="M84,124 L66,146 M116,124 L134,146" stroke="#f0c7a0" stroke-width="11" stroke-linecap="round"/>
-      <g class="ld-paddle"><path d="M28,92 L172,92" stroke="#2b2b2b" stroke-width="5" stroke-linecap="round"/><rect x="14" y="84" width="24" height="16" rx="5" fill="#2f8cf0"/><rect x="162" y="84" width="24" height="16" rx="5" fill="#2f8cf0"/>
-        <path d="M78,90 L66,92 M122,90 L134,92" stroke="#f0c7a0" stroke-width="9" stroke-linecap="round"/></g>
-      <path d="M22,122 A78,28 0 0,0 178,122" fill="none" stroke="#e3262e" stroke-width="30"/>
-      <path d="M22,128 A78,24 0 0,0 178,128" fill="none" stroke="#fff" stroke-width="3" opacity=".8"/>
-      <g transform="translate(100,48)"><circle r="31" fill="#000" opacity=".18" cy="3"/><circle r="30" fill="#fff"/><circle r="25" fill="#2f7cf6"/>
-        <ellipse cy="5" rx="16" ry="18" fill="#f1c19b"/><path d="M-18,-4 C-18,-22 18,-22 18,-4 L18,-8 C10,-14 -10,-14 -18,-8 Z" fill="#3a2618"/>
-        <ellipse cx="-7" cy="2" rx="6" ry="4.5" fill="#16191c"/><ellipse cx="7" cy="2" rx="6" ry="4.5" fill="#16191c"/><rect x="-2" y="1" width="4" height="1.6" fill="#16191c"/>
-        <path d="M-6,12 Q0,17 6,12" fill="none" stroke="#8a3b2b" stroke-width="2" stroke-linecap="round"/></g>
-    </svg>
-  </div>
+<div id="loader" role="status" aria-live="polite" aria-label="Pinawa Float Race 加载中">
   <div class="ld-info">
-    <div class="ld-bar"><div class="ld-fill" id="ldFill"></div>
-      <div class="ld-mark" id="ldMark" aria-hidden="true"><svg viewBox="0 0 40 40"><ellipse cx="20" cy="24" rx="17" ry="9" fill="none" stroke="#e3262e" stroke-width="7"/><ellipse cx="20" cy="24" rx="9" ry="4" fill="#2f7cf6"/><circle cx="20" cy="12" r="8" fill="#fff"/><circle cx="20" cy="12" r="6" fill="#f1c19b"/><rect x="15" y="10" width="10" height="3" rx="1.5" fill="#16191c"/></svg></div></div>
-    <div class="ld-row"><span id="ldStage">正在准备河道…</span><span id="ldPct">0%</span></div>
-    <p class="ld-tip" id="ldTip"></p>
+    <div class="ld-row"><span id="ldStage">加载中…</span><span id="ldPct">0%</span></div>
+    <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
     <button id="ldRetry" type="button" hidden>重新加载</button>
   </div>
 </div>
@@ -329,35 +275,29 @@ body.rot #rotHint{display:block}
 // ---------- loading screen controller ----------
 (() => {
   const $=id=>document.getElementById(id);
-  const loader=$('loader'),fill=$('ldFill'),mark=$('ldMark'),stageEl=$('ldStage'),pctEl=$('ldPct'),tipEl=$('ldTip'),retry=$('ldRetry');
-  // flowing wave paths
-  document.querySelectorAll('[data-wave]').forEach(p=>{const a=+p.dataset.wave;let d='M0,'+a;for(let x=0;x<1600;x+=100)d+=` Q${x+25},${a*0.1} ${x+50},${a} T${x+100},${a}`;p.setAttribute('d',d+' L1600,200 L0,200 Z');});
+  const loader=$('loader'),fill=$('ldFill'),stageEl=$('ldStage'),pctEl=$('ldPct'),retry=$('ldRetry');
   // same landscape rotation as the game, so the loader is already sideways on an upright phone
   const isT=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
   function fit(){const W=innerWidth,H=innerHeight,rot=isT&&H>W,w=rot?H:W,h=rot?W:H;document.body.classList.toggle('rot',rot);document.body.classList.toggle('compact',isT&&h<560);
     const st=$('stage');st.style.width=w+'px';st.style.height=h+'px';}
   fit();addEventListener('resize',fit);
-  const TIPS=['长按 <b>蓄力跳跃</b>，圈满再松手，能直接飞过礁石','落水的大水花会把 <b>旁边的对手冲开</b>','集满 <b>3 罐气泡水</b>，就能扔鳄龟或掏出豪华水枪',
-    '<b>白色急流</b> 段水流更快，礁石也更多','点开始菜单里的头像，能换成 <b>相册里的照片</b>','绿色箭头是 <b>加速带</b>，压上去自动冲刺','被卡住 2 秒会 <b>自动脱困</b>，别慌'];
-  let tipI=Math.floor(Math.random()*TIPS.length);const showTip=()=>{tipEl.style.opacity=0;setTimeout(()=>{tipEl.innerHTML='小提示：'+TIPS[tipI%TIPS.length];tipEl.style.opacity=.9;tipI++;},250);};
-  showTip();const tipTimer=setInterval(showTip,3200);
   let p=0,target=0,done=false,t0=performance.now(),raf=0;
   function set(t,label){target=Math.max(target,t);if(label)stageEl.textContent=label;}
   function tick(){const cap=done?100:target;p+=(cap-p)*(done?0.18:0.05);if(!done&&p<cap)p+=0.02;p=Math.min(p,cap);
-    fill.style.width=`calc(${p}% - 4px)`;mark.style.left=p+'%';pctEl.textContent=Math.floor(p)+'%';
+    fill.style.width=p+'%';pctEl.textContent=Math.floor(p)+'%';
     if(done&&p>99.4&&performance.now()-t0>1300){pctEl.textContent='100%';finish();return;}raf=requestAnimationFrame(tick);}
-  function finish(){clearInterval(tipTimer);loader.classList.add('out');setTimeout(()=>{loader.hidden=true;},650);}
-  function fail(msg){done=false;cancelAnimationFrame(raf);stageEl.textContent=msg;tipEl.innerHTML='';clearInterval(tipTimer);retry.hidden=false;retry.focus();}
+  function finish(){loader.classList.add('out');setTimeout(()=>{loader.hidden=true;},650);}
+  function fail(msg){done=false;cancelAnimationFrame(raf);stageEl.textContent=msg;retry.hidden=false;retry.focus();}
   retry.addEventListener('click',()=>location.reload());
-  window.__loader={set,ready(){set(100,'出发准备就绪！');done=true;},fail};
+  window.__loader={set,ready(){set(100,'准备出发！');done=true;},fail};
   raf=requestAnimationFrame(tick);
   // load three.js (cdnjs, then jsDelivr as a backup), wait for fonts, then build the world
   const SRCS=['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js'];
-  set(38,'正在加载 3D 引擎…');
+  set(38,'加载中…');
   function load(i){const sc=document.createElement('script');sc.src=SRCS[i];sc.onload=afterThree;sc.onerror=()=>{if(i+1<SRCS.length)load(i+1);else fail('3D 引擎加载失败，请检查网络后重试');};document.head.appendChild(sc);}
-  function afterThree(){set(60,'正在铺设河道…');
+  function afterThree(){set(60,'加载中…');
     const fonts=document.fonts&&document.fonts.ready?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve();
-    fonts.then(()=>{set(82,'正在吹漂流圈、冰镇气泡水…');
+    fonts.then(()=>{set(82,'加载中…');
       requestAnimationFrame(()=>requestAnimationFrame(()=>{try{window.__bootGame();}catch(e){console.error(e);fail('游戏启动失败：你的浏览器可能不支持 3D（WebGL），换个浏览器试试');}}));});}
   load(0);
 })();
