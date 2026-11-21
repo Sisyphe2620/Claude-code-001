@@ -39,6 +39,11 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 .mute:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
 .soundrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .soundrow .lab{margin-right:auto}
+.res-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.exit{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 14px 6px 10px;border-radius:12px;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.1);color:#fff;font-family:var(--display);font-size:17px;cursor:pointer}
+.exit svg{width:16px;height:16px}
+.exit:hover{background:rgba(255,255,255,.2)}
+.exit:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
 .hint-strong{color:var(--vest);font-weight:700;letter-spacing:.04em}
 #track{position:fixed;top:calc(20px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(36vw,360px);height:10px;border-radius:6px;background:rgba(5,34,42,.6);border:1px solid var(--panel-edge)}
 #track .flag{position:absolute;right:-6px;top:-7px;width:22px;height:22px;border-radius:4px;background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/11px 11px;border:1px solid #fff}
@@ -241,7 +246,7 @@ body.compact .ld-info{padding-block:0 14px;gap:6px}body.compact .ld-bar{height:1
 
 <div id="result" class="overlay" hidden>
   <div class="card">
-    <div class="lab">比赛结束</div>
+    <div class="res-head"><div class="lab">比赛结束</div><button class="exit" id="exitBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>退出</button></div>
     <div class="place" id="placeTxt">第 1 名</div>
     <table id="resTable"></table>
     <button class="go" id="againBtn">再来一局</button>
@@ -1095,6 +1100,8 @@ function tryLandscape(){if(!isTouch)return;try{const el=document.documentElement
 function startRace(){unlockAudio();sfx('click');setMusic('off');tryLandscape();resetRace();ui.wasBoost=false;ui.dTier=0;state='countdown';countT=3.6;menu.hidden=true;result.hidden=true;hud.hidden=false;touchEl.hidden=!isTouch;}
 document.getElementById('startBtn').addEventListener('click',startRace);
 document.getElementById('againBtn').addEventListener('click',startRace);
+function exitToMenu(){sfx('click');resetRace();state='menu';result.hidden=true;hud.hidden=true;touchEl.hidden=true;menu.hidden=false;camInit=false;setMusic('menu');document.body.classList.remove('cine');setTimeout(()=>document.getElementById('startBtn').focus(),50);}
+document.getElementById('exitBtn').addEventListener('click',exitToMenu);
 function onPlayerFinish(){state='finished';resultT=3.5;const place=standings().indexOf(player)+1;setMusic('off');sfx(place===1?'win':'finish');say(place===1?'冠军！':`第 ${place} 名`,2.5);}
 function standings(){return racers.slice().sort((a,b)=>{if(a.finishTime!=null&&b.finishTime!=null)return a.finishTime-b.finishTime;if(a.finishTime!=null)return -1;if(b.finishTime!=null)return 1;return b.u-a.u;});}
 const fmt=t=>{const m=Math.floor(t/60),s=t-m*60;return`${m}:${s<10?'0':''}${s.toFixed(2)}`;};
