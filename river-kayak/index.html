@@ -51,7 +51,32 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 #track .dot.me{width:32px;height:32px;margin:-16px 0 0 -16px;z-index:2}
 .roster-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .roster-head .hint{font-size:12px;color:var(--muted)}
-.roster{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.roster{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;position:relative}
+/* first-time avatar hint: pulsing ring on "you" + speech bubble pointing at it */
+.slot.me.nophoto img{border-radius:50%;animation:meRing 1.3s ease-out infinite}
+@keyframes meRing{0%{box-shadow:0 0 0 0 rgba(255,122,26,.95)}100%{box-shadow:0 0 0 14px rgba(255,122,26,0)}}
+.slot.me.nophoto::after{content:"+ 照片";right:auto;left:50%;transform:translateX(-50%);top:auto;bottom:22px;font-size:11px;padding:2px 7px;white-space:nowrap;box-shadow:0 2px 0 #b44a00}
+#avHint{position:absolute;z-index:5;left:0;top:calc(100% + 10px);width:min(330px,92%);box-sizing:border-box;padding:10px 12px 10px 14px;border-radius:14px;background:#fff;color:#1b2a30;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;animation:hintIn .35s ease-out both}
+#avHint::before{content:"";position:absolute;top:-8px;left:calc(100% / 12 * 1);left:28px;width:16px;height:16px;background:#fff;transform:rotate(45deg);border-radius:3px}
+#avHint b{font-family:var(--display);font-weight:400;font-size:17px;color:#e85d00}
+#avHint p{margin:0;grid-column:1;font-size:12.5px;line-height:1.45;color:#3a4a50}
+#avHint .row{grid-column:1/-1;display:flex;gap:8px;margin-top:4px}
+#avHint button{font:inherit;font-size:13px;border-radius:9px;padding:6px 12px;cursor:pointer}
+#avHintGo{border:0;background:var(--vest);color:#2a0d00;font-weight:700;box-shadow:0 3px 0 #b44a00}
+#avHintNo{border:1px solid #c9d6da;background:#fff;color:#3a4a50}
+#avHint button:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
+@keyframes hintIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+body.compact #avHint{top:calc(100% + 6px);padding:8px 10px;width:min(300px,92%)}body.compact #avHint p{font-size:12px}
+/* ask once before the first race */
+#askAv .card{width:min(440px,100%);text-align:center;justify-items:center}
+#askAv img{width:96px;height:96px}
+#askAv .btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}
+#askAv .btns button{flex:1 1 160px}
+#askSkip{font:inherit;font-size:15px;border-radius:14px;padding:12px 16px;border:1px solid var(--panel-edge);background:rgba(255,255,255,.08);color:var(--text);cursor:pointer}
+#askSkip:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
+body.compact #askAv img{width:64px;height:64px}
+@media (prefers-reduced-motion:reduce){.slot.me.nophoto img,#avHint{animation:none}}
 .slot{background:none;border:0;padding:0;color:var(--text);font:inherit;cursor:pointer;display:grid;justify-items:center;gap:2px;min-width:0}
 .slot img{width:100%;max-width:64px;aspect-ratio:1;display:block;transition:transform .15s}
 .slot:hover img,.slot:focus-visible img{transform:scale(1.08) rotate(-4deg)}
@@ -249,7 +274,11 @@ body.compact .ld-info{padding-block:0 14px;gap:6px}body.compact .ld-bar{height:1
       <span class="chip"><b>气泡水罐</b> 集满 3 罐放技能</span>
     </div>
     <div class="roster-head"><span class="lab">全部 6 位选手<b class="hint-strong">（点头像改照片和名字）</b></span><button class="btn2 ghost small" id="bulkPick">一次选多张照片</button></div>
-    <div class="roster" id="roster"></div>
+    <div class="roster" id="roster"><div id="avHint" hidden role="note">
+      <b>先换上你自己的头像吧！</b>
+      <p>点上面的「你」，从相册选一张照片。比赛里你的漂流圈上就是这张大头贴，朋友们的头像也能一起换。</p>
+      <div class="row"><button id="avHintGo" type="button">选照片</button><button id="avHintNo" type="button">知道了</button></div>
+    </div></div>
     <p class="sub small" id="bulkMsg" hidden></p>
     <div class="soundrow"><span class="lab">声音</span><button class="btn2 ghost small" id="musicBtn" type="button">音乐：开</button><button class="btn2 ghost small" id="sfxBtn" type="button">音效：开</button></div>
     <button class="go" id="startBtn">开始比赛</button>
@@ -264,6 +293,14 @@ body.compact .ld-info{padding-block:0 14px;gap:6px}body.compact .ld-bar{height:1
   </div>
 </div>
 
+<div id="askAv" class="overlay" hidden>
+  <div class="card">
+    <img id="askImg" alt="">
+    <h1 style="font-size:clamp(24px,5vw,32px)">用你自己的照片当头像？</h1>
+    <p class="sub">比赛里你的漂流圈上会顶着这张大头贴。也可以给阿浪、小鱼他们换成朋友的照片。照片只存在你的手机里，不会上传。</p>
+    <div class="btns"><button class="go" id="askGo" type="button">从相册选照片</button><button id="askSkip" type="button">先不用，直接开始</button></div>
+  </div>
+</div>
 <div id="editor" class="overlay" hidden>
   <div class="card ed">
     <div class="lab" id="edTitle">编辑选手</div>
@@ -695,6 +732,23 @@ bulkFile.addEventListener('change',()=>{const files=[...(bulkFile.files||[])].sl
     im.onload=()=>{const r=racers[i];const out=cropTo256(im,0,0,1);r.photo=out;r.photoData=out.toDataURL('image/jpeg',0.88);refreshLook(r);fin();};
     im.onerror=()=>{bad++;fin();};im.src=URL.createObjectURL(f);});});
 loadStore();
+// ---- first-time avatar hints ----
+const HINT_KEY='river-tube-avhint-v1',ASK_KEY='river-tube-avask-v1';
+const flag=k=>{try{return localStorage.getItem(k)==='1';}catch(_){return false;}};
+const setFlag=k=>{try{localStorage.setItem(k,'1');}catch(_){}};
+const avHint=document.getElementById('avHint');
+let hintClosed=flag(HINT_KEY);
+function syncHint(){const none=!player.photo;player.slot.classList.toggle('nophoto',none);avHint.hidden=!(none&&!hintClosed);}
+function closeHint(){hintClosed=true;setFlag(HINT_KEY);syncHint();}
+document.getElementById('avHintNo').addEventListener('click',closeHint);
+document.getElementById('avHintGo').addEventListener('click',()=>{closeHint();openEditor(player);ed.file.value='';ed.file.click();});
+player.slot.addEventListener('click',()=>{hintClosed=true;setFlag(HINT_KEY);});
+const _refresh=refreshLook;refreshLook=r=>{_refresh(r);if(r===player)syncHint();};
+syncHint();setTimeout(syncHint,600);
+const askEl=document.getElementById('askAv');
+function maybeStart(){if(!player.photo&&!flag(ASK_KEY)){setFlag(ASK_KEY);document.getElementById('askImg').src=player.stickerURL||'';askEl.hidden=false;document.getElementById('askGo').focus();return;}startRace();}
+document.getElementById('askGo').addEventListener('click',()=>{askEl.hidden=true;closeHint();openEditor(player);ed.file.value='';ed.file.click();});
+document.getElementById('askSkip').addEventListener('click',()=>{askEl.hidden=true;startRace();});
 
 // ---------- particles ----------
 const PMAX=700,pPos=new Float32Array(PMAX*3),pCol=new Float32Array(PMAX*3),parts=[];
@@ -1109,7 +1163,7 @@ function tryLandscape(){if(!isTouch)return;try{const el=document.documentElement
   const p=fs&&fs.call(el);const lock=()=>{try{const q=screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape');q&&q.catch&&q.catch(()=>{});}catch(_){}};
   if(p&&p.then)p.then(lock,()=>{});else lock();}catch(_){}}
 function startRace(){unlockAudio();sfx('click');setMusic('off');tryLandscape();resetRace();ui.wasBoost=false;ui.dTier=0;state='countdown';countT=3.6;menu.hidden=true;result.hidden=true;hud.hidden=false;touchEl.hidden=!isTouch;}
-document.getElementById('startBtn').addEventListener('click',startRace);
+document.getElementById('startBtn').addEventListener('click',maybeStart);
 document.getElementById('againBtn').addEventListener('click',startRace);
 function exitToMenu(){sfx('click');msgT=0;ui.msg.classList.remove('show');resetRace();state='menu';result.hidden=true;hud.hidden=true;touchEl.hidden=true;menu.hidden=false;camInit=false;setMusic('menu');document.body.classList.remove('cine');setTimeout(()=>document.getElementById('startBtn').focus(),50);}
 document.getElementById('exitBtn').addEventListener('click',exitToMenu);
