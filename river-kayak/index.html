@@ -39,6 +39,11 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 .mute:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
 .soundrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .soundrow .lab{margin-right:auto}
+.menu-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.langsw{display:inline-flex;flex:none;border:1px solid var(--panel-edge);border-radius:999px;padding:3px;background:rgba(255,255,255,.06)}
+.langsw button{font:inherit;font-size:13px;font-weight:600;border:0;border-radius:999px;padding:5px 11px;background:transparent;color:var(--muted);cursor:pointer;min-width:44px}
+.langsw button.on{background:var(--vest);color:#2a0d00}
+.langsw button:focus-visible{outline:3px solid var(--boost);outline-offset:2px}
 .res-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .exit{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 14px 6px 10px;border-radius:12px;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.1);color:#fff;font-family:var(--display);font-size:17px;cursor:pointer}
 .exit svg{width:16px;height:16px}
@@ -55,7 +60,7 @@ body.rot #stage{transform:rotate(90deg) translateY(-100%)}
 /* first-time avatar hint: pulsing ring on "you" + speech bubble pointing at it */
 .slot.me.nophoto img{border-radius:50%;animation:meRing 1.3s ease-out infinite}
 @keyframes meRing{0%{box-shadow:0 0 0 0 rgba(255,122,26,.95)}100%{box-shadow:0 0 0 14px rgba(255,122,26,0)}}
-.slot.me.nophoto::after{content:"+ 照片";right:auto;left:50%;transform:translateX(-50%);top:auto;bottom:22px;font-size:11px;padding:2px 7px;white-space:nowrap;box-shadow:0 2px 0 #b44a00}
+.slot.me.nophoto::after{content:var(--lbl-photo,"+ Photo");right:auto;left:50%;transform:translateX(-50%);top:auto;bottom:22px;font-size:11px;padding:2px 7px;white-space:nowrap;box-shadow:0 2px 0 #b44a00}
 #avHint{position:absolute;z-index:5;left:0;top:calc(100% + 10px);width:min(330px,92%);box-sizing:border-box;padding:10px 12px 10px 14px;border-radius:14px;background:#fff;color:#1b2a30;
   box-shadow:0 8px 24px rgba(0,0,0,.35);display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;animation:hintIn .35s ease-out both}
 #avHint::before{content:"";position:absolute;top:-8px;left:calc(100% / 12 * 1);left:28px;width:16px;height:16px;background:#fff;transform:rotate(45deg);border-radius:3px}
@@ -95,7 +100,7 @@ body.compact #askAv img{width:64px;height:64px}
 .sub.small{font-size:12px}
 .btn2.small{font-size:12px;padding:5px 10px}
 .slot{position:relative}
-.slot::after{content:"换";position:absolute;top:0;right:calc(50% - 34px);font-size:11px;line-height:1;padding:3px 5px;border-radius:999px;background:var(--vest);color:#2a0d00;font-weight:600}
+.slot::after{content:var(--lbl-edit,"Edit");position:absolute;top:0;right:calc(50% - 34px);font-size:11px;line-height:1;padding:3px 5px;border-radius:999px;background:var(--vest);color:#2a0d00;font-weight:600}
 .ed-nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
 #edCount{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 body.compact .slot::after{right:calc(50% - 28px)}
@@ -225,105 +230,163 @@ body.compact .ld-info{padding-block:0 14px;gap:6px}body.compact .ld-bar{height:1
 </style>
 
 <div id="stage">
-<div id="loader" role="status" aria-live="polite" aria-label="Pinawa Float Race 加载中">
+<div id="loader" role="status" aria-live="polite" data-i18n-aria="loaderAria" aria-label="Pinawa Float Race is loading">
   <div class="ld-info">
-    <div class="ld-row"><span id="ldStage">加载中…</span><span id="ldPct">0%</span></div>
+    <div class="ld-row"><span id="ldStage">Loading…</span><span id="ldPct">0%</span></div>
     <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
-    <button id="ldRetry" type="button" hidden>重新加载</button>
+    <button id="ldRetry" type="button" data-i18n="retry" hidden>Reload</button>
   </div>
 </div>
 <canvas id="game"></canvas>
 
 <div id="hud" hidden>
-  <div class="hud-box tl"><div id="pos">6<span>/6</span></div><div class="lab">名次</div><div id="spd">0<small> km/h</small></div></div>
-  <div class="hud-box tr"><div class="trrow"><button id="muteBtn" class="mute" type="button" aria-label="声音开关"></button><div id="time">0:00.00</div></div><canvas id="map" width="256" height="256"></canvas></div>
+  <div class="hud-box tl"><div id="pos">6<span>/6</span></div><div class="lab" data-i18n="place">Place</div><div id="spd">0<small> km/h</small></div></div>
+  <div class="hud-box tr"><div class="trrow"><button id="muteBtn" class="mute" type="button" aria-label="Mute sound"></button><div id="time">0:00.00</div></div><canvas id="map" width="256" height="256"></canvas></div>
   <div id="track"><div class="flag"></div></div>
   <div class="hud-box" id="itemBox">
-    <div class="skills"><div class="jumpk"><kbd>空格</kbd>长按蓄力跳<span id="jumpBar"><b></b></span></div><div class="cans" id="cans">气泡水 <i></i><i></i><i></i></div>
-      <div class="skbtns"><button class="sk" id="skTurtle" type="button">扔鳄龟<kbd>Q</kbd></button><button class="sk" id="skGun" type="button">水枪<kbd>E</kbd></button></div></div>
+    <div class="skills"><div class="jumpk"><kbd data-i18n="space">Space</kbd><span data-i18n="holdJump">Hold to charge jump</span><span id="jumpBar"><b></b></span></div><div class="cans" id="cans"><span data-i18n="soda">Soda</span> <i></i><i></i><i></i></div>
+      <div class="skbtns"><button class="sk" id="skTurtle" type="button"><span data-i18n="skTurtle">Turtle</span><kbd>Q</kbd></button><button class="sk" id="skGun" type="button"><span data-i18n="skGun">Water gun</span><kbd>E</kbd></button></div></div>
   </div>
 </div>
 <div id="cine"></div>
 <div id="msg"></div>
 
 <div id="touch" hidden>
-  <button class="tbtn" id="tL" aria-label="左转">◀</button>
-  <button class="tbtn" id="tR" aria-label="右转">▶</button>
-    <button class="tbtn" id="tBrake">倒划</button>
-  <button class="tbtn" id="tJump">蓄力<br>跳跃</button>
-  <button class="tbtn skill" id="tTurtle">扔<br>鳄龟</button>
-  <button class="tbtn skill" id="tGun">豪华<br>水枪</button>
+  <button class="tbtn" id="tL" data-i18n-aria="left" aria-label="Steer left">◀</button>
+  <button class="tbtn" id="tR" data-i18n-aria="right" aria-label="Steer right">▶</button>
+    <button class="tbtn" id="tBrake" data-i18n="back">Back</button>
+  <button class="tbtn" id="tJump">Charge<br>Jump</button>
+  <button class="tbtn skill" id="tTurtle" data-i18n="tTurtle">Throw<br>Turtle</button>
+  <button class="tbtn skill" id="tGun" data-i18n="tGun">Water<br>Gun</button>
 </div>
 
 <div id="menu" class="overlay">
   <div class="card">
-    <h1>Pinawa <em>Float</em> Race</h1>
-    <p class="sub">六个漂流圈顺着峡谷河道一路冲下去，躲开礁石，抢气泡水放技能，第一个冲过终点的拿冠军。</p>
+    <div class="menu-top"><h1>Pinawa <em>Float</em> Race</h1><div class="langsw" role="group" data-i18n-aria="lang" aria-label="Language"><button type="button" data-lang="en">EN</button><button type="button" data-lang="zh">中文</button></div></div>
+    <p class="sub" data-i18n="intro"></p>
     <div class="keys" id="keyHelp">
-      <kbd>W / ↑</kbd><span>划桨前进</span>
-      <kbd>A D / ← →</kbd><span>转向</span>
-      <kbd>S / ↓</kbd><span>倒划减速</span>
-      <kbd>空格</kbd><span>长按蓄力，蓄满后松开就跳起来：越过礁石和对手，落水的水花会把旁边的人冲开</span>
-      <kbd>Q / E</kbd><span>集满 3 罐气泡水后：Q 扔鳄龟，E 豪华水枪</span>
+      <kbd>W / ↑</kbd><span data-i18n="kPaddle"></span>
+      <kbd>A D / ← →</kbd><span data-i18n="kSteer"></span>
+      <kbd>S / ↓</kbd><span data-i18n="kBack"></span>
+      <kbd data-i18n="space"></kbd><span data-i18n="kJump"></span>
+      <kbd>Q / E</kbd><span data-i18n="kSkills"></span>
     </div>
-    <p class="sub" id="touchHelp" hidden>横屏游戏，自动划桨：左手按 ◀ ▶ 转向，右手长按「蓄力跳跃」，圈满后松手就跳；集满 3 罐气泡水后按「扔鳄龟」或「豪华水枪」放技能。<span id="rotHint">请把手机向左横过来拿（开着方向锁也能玩）。</span></p>
+    <p class="sub" id="touchHelp" hidden><span data-i18n="touchHelp"></span><span id="rotHint" data-i18n="rotHint"></span></p>
     <div class="legend">
-            <span class="chip"><b>绿箭头</b> 加速带</span>
-      <span class="chip"><b>白色急流</b> 水流更快</span>
-      <span class="chip"><b>礁石</b> 撞上会减速</span>
-      <span class="chip"><b>气泡水罐</b> 集满 3 罐放技能</span>
+            <span class="chip" data-i18n="chipBoost"></span>
+      <span class="chip" data-i18n="chipRapids"></span>
+      <span class="chip" data-i18n="chipRocks"></span>
+      <span class="chip" data-i18n="chipCans"></span>
     </div>
-    <div class="roster-head"><span class="lab">全部 6 位选手<b class="hint-strong">（点头像改照片和名字）</b></span><button class="btn2 ghost small" id="bulkPick">一次选多张照片</button></div>
+    <div class="roster-head"><span class="lab"><span data-i18n="rosterLabel"></span><b class="hint-strong" data-i18n="rosterHint"></b></span><button class="btn2 ghost small" id="bulkPick" data-i18n="bulk"></button></div>
     <div class="roster" id="roster"><div id="avHint" hidden role="note">
-      <b>先换上你自己的头像吧！</b>
-      <p>点上面的「你」，从相册选一张照片。比赛里你的漂流圈上就是这张大头贴，朋友们的头像也能一起换。</p>
-      <div class="row"><button id="avHintGo" type="button">选照片</button><button id="avHintNo" type="button">知道了</button></div>
+      <b data-i18n="hintTitle"></b>
+      <p data-i18n="hintBody"></p>
+      <div class="row"><button id="avHintGo" type="button" data-i18n="hintGo"></button><button id="avHintNo" type="button" data-i18n="hintNo"></button></div>
     </div></div>
     <p class="sub small" id="bulkMsg" hidden></p>
-    <div class="soundrow"><span class="lab">声音</span><button class="btn2 ghost small" id="musicBtn" type="button">音乐：开</button><button class="btn2 ghost small" id="sfxBtn" type="button">音效：开</button></div>
-    <button class="go" id="startBtn">开始比赛</button>
+    <div class="soundrow"><span class="lab" data-i18n="sound"></span><button class="btn2 ghost small" id="musicBtn" type="button"></button><button class="btn2 ghost small" id="sfxBtn" type="button"></button></div>
+    <button class="go" id="startBtn" data-i18n="start"></button>
   </div>
 </div>
 
 <div id="result" class="overlay" hidden>
   <div class="card">
-    <div class="res-head"><div class="res-title"><div class="lab">比赛结束</div><div class="place" id="placeTxt">第 1 名</div></div><button class="exit" id="exitBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>退出</button></div>
+    <div class="res-head"><div class="res-title"><div class="lab" data-i18n="raceOver"></div><div class="place" id="placeTxt"></div></div><button class="exit" id="exitBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span data-i18n="exit"></span></button></div>
     <table id="resTable"></table>
-    <button class="go" id="againBtn">再来一局</button>
+    <button class="go" id="againBtn" data-i18n="again"></button>
   </div>
 </div>
 
 <div id="askAv" class="overlay" hidden>
   <div class="card">
     <img id="askImg" alt="">
-    <h1 style="font-size:clamp(24px,5vw,32px)">用你自己的照片当头像？</h1>
-    <p class="sub">比赛里你的漂流圈上会顶着这张大头贴。也可以给阿浪、小鱼他们换成朋友的照片。照片只存在你的手机里，不会上传。</p>
-    <div class="btns"><button class="go" id="askGo" type="button">从相册选照片</button><button id="askSkip" type="button">先不用，直接开始</button></div>
+    <h1 style="font-size:clamp(24px,5vw,32px)" data-i18n="askTitle"></h1>
+    <p class="sub" data-i18n="askBody"></p>
+    <div class="btns"><button class="go" id="askGo" type="button" data-i18n="askGo"></button><button id="askSkip" type="button" data-i18n="askSkip"></button></div>
   </div>
 </div>
 <div id="editor" class="overlay" hidden>
   <div class="card ed">
-    <div class="lab" id="edTitle">编辑选手</div>
+    <div class="lab" id="edTitle"></div>
     <div class="ed-row">
-      <canvas id="cropC" width="480" height="480" aria-label="头像裁剪区，拖动调整位置"></canvas>
+      <canvas id="cropC" width="480" height="480" data-i18n-aria="cropAria" aria-label="Photo crop area, drag to move"></canvas>
       <div class="ed-side">
-        <label for="edName">名字</label>
-        <input id="edName" maxlength="6" autocomplete="off">
-        <button class="btn2" id="edPick">从相册选照片</button>
-        <label for="edZoom">缩放</label>
+        <label for="edName" data-i18n="edName"></label>
+        <input id="edName" maxlength="8" autocomplete="off">
+        <button class="btn2" id="edPick" data-i18n="edPick"></button>
+        <label for="edZoom" data-i18n="edZoom"></label>
         <input type="range" id="edZoom" min="1" max="4" step="0.01" value="1">
-        <p class="sub small" id="edTip">拖动照片，把脸放进圆圈里。</p>
-        <button class="btn2 ghost" id="edReset">恢复默认头像</button>
+        <p class="sub small" id="edTip"></p>
+        <button class="btn2 ghost" id="edReset" data-i18n="edReset"></button>
       </div>
     </div>
-    <div class="ed-nav"><button class="btn2 ghost" id="edPrev">‹ 上一位</button><span id="edCount"></span><button class="btn2 ghost" id="edNext">下一位 ›</button></div>
-    <button class="go" id="edOk">完成</button>
+    <div class="ed-nav"><button class="btn2 ghost" id="edPrev" data-i18n="edPrev"></button><span id="edCount"></span><button class="btn2 ghost" id="edNext" data-i18n="edNext"></button></div>
+    <button class="go" id="edOk" data-i18n="edOk"></button>
   </div>
 </div>
 <input type="file" id="filePick" accept="image/*" hidden>
 <input type="file" id="bulkFile" accept="image/*" multiple hidden>
 </div>
 
+<script>
+// ---------- language (English default, Chinese optional) ----------
+window.I18N={
+ en:{loading:'Loading…',ready:'Ready to go!',fail3d:"Couldn't load the 3D engine. Check your connection and try again.",failBoot:"The game couldn't start. Your browser may not support 3D (WebGL). Try another browser.",
+  retry:'Reload',loaderAria:'Pinawa Float Race is loading',place:'Place',muteOn:'Mute sound',muteOff:'Turn sound on',space:'Space',holdJump:'Hold to charge jump',soda:'Soda',
+  skTurtle:'Turtle',skGun:'Water gun',left:'Steer left',right:'Steer right',back:'Back',jump:'Charge<br>Jump',jumpGo:'Let go<br>to jump!',tTurtle:'Throw<br>Turtle',tGun:'Water<br>Gun',
+  intro:'Six river tubes race down a canyon river. Dodge the rocks, grab soda cans to power up skills, and be first across the finish line.',
+  kPaddle:'Paddle forward',kSteer:'Steer',kBack:'Back-paddle to slow down',kJump:'Hold to charge, then let go to jump over rocks and rivals. Your splash-down pushes nearby racers away.',kSkills:'With 3 soda cans: Q throws a snapping turtle, E fires the deluxe water gun',
+  touchHelp:'Landscape game, paddling is automatic. Left thumb: ◀ ▶ to steer. Right thumb: hold “Charge Jump” until the ring fills, then let go. With 3 soda cans, tap “Throw Turtle” or “Water Gun”.',
+  rotHint:' Turn your phone sideways to the left (works with rotation lock on).',
+  chipBoost:'<b>Green arrows</b> speed boost',chipRapids:'<b>White rapids</b> faster current',chipRocks:'<b>Rocks</b> slow you down',chipCans:'<b>Soda cans</b> collect 3 for a skill',
+  rosterLabel:'All 6 racers',rosterHint:' (tap a face to change photo and name)',bulk:'Pick several photos',
+  hintTitle:'Put your own face on the tube!',hintBody:'Tap “You” above and pick a photo from your album. In the race your tube wears it as a big sticker head, and you can give the other racers your friends’ faces too.',hintGo:'Pick photo',hintNo:'Got it',
+  sound:'Sound',music:'Music: {s}',sfx:'Effects: {s}',on:'On',off:'Off',start:'Start race',lang:'Language',
+  raceOver:'Race over',placeN:'{ord} place',exit:'Exit',again:'Race again',
+  askTitle:'Use your own photo?',askBody:'Your tube will wear it as a big sticker head. You can also give Ace, Minnow and the others your friends’ photos. Photos stay on your phone and are never uploaded.',askGo:'Pick from album',askSkip:'Not now, just race',
+  edTitle:'Edit racer',cropAria:'Photo crop area, drag to move',edName:'Name',edPick:'Pick from album',edZoom:'Zoom',edTipDrag:'Drag the photo so the face sits inside the circle.',edTipPick:'Pick a photo from your album first.',edTipBad:"Couldn't open that photo. Try another one (JPG or PNG).",
+  edReset:'Back to default face',edPrev:'‹ Previous',edNext:'Next ›',edOk:'Done',edYou:'You (player)',edAI:'Computer racer',edCount:'{i} of {n}',slotAria:'Edit racer {name}',
+  bulkDone:'Updated {k} racers in order{bad}. Tap a face to adjust the crop or rename.',bulkBad:' ({b} could not be opened)',cssEdit:'Edit',cssPhoto:'+ Photo',
+  boost:'Boost!',waveYou:'Hit by a big wave!',waveHit:'Your wave hit {n}!',waveMiss:'The wave missed',noTarget:'No rival nearby',turtleAt:'Turtle → {name}',turtleAtYou:'{name} threw a turtle at you!',
+  gunAt:'Water gun → {name}',gunAtYou:'{name} pulled out a water gun!',scaredYou:'{name}’s turtle scared you!',scaredThem:'{name} is freaking out!',flippedYou:'{name} flipped you over!',flippedThem:'You flipped {name}!',
+  unstuck:'Unstuck!',chargeFull:'Charge it all the way first',splashYou:'{name}’s splash pushed you away!',splashHit:'Your splash pushed {n} away!',drift:'Super drift boost!',rock:'Hit a rock!',
+  skillReady:'Skill ready!',sodaN:'Soda {n}/{max}',champ:'Champion!',approx:'~',go:'Go!',
+  names:['You','Ace','Minnow','Rocky','Swift','Captain']},
+ zh:{loading:'加载中…',ready:'准备出发！',fail3d:'3D 引擎加载失败，请检查网络后重试',failBoot:'游戏启动失败：你的浏览器可能不支持 3D（WebGL），换个浏览器试试',
+  retry:'重新加载',loaderAria:'Pinawa Float Race 加载中',place:'名次',muteOn:'关闭声音',muteOff:'打开声音',space:'空格',holdJump:'长按蓄力跳',soda:'气泡水',
+  skTurtle:'扔鳄龟',skGun:'水枪',left:'左转',right:'右转',back:'倒划',jump:'蓄力<br>跳跃',jumpGo:'松手<br>跳！',tTurtle:'扔<br>鳄龟',tGun:'豪华<br>水枪',
+  intro:'六个漂流圈顺着峡谷河道一路冲下去，躲开礁石，抢气泡水放技能，第一个冲过终点的拿冠军。',
+  kPaddle:'划桨前进',kSteer:'转向',kBack:'倒划减速',kJump:'长按蓄力，蓄满后松开就跳起来：越过礁石和对手，落水的水花会把旁边的人冲开',kSkills:'集满 3 罐气泡水后：Q 扔鳄龟，E 豪华水枪',
+  touchHelp:'横屏游戏，自动划桨：左手按 ◀ ▶ 转向，右手长按「蓄力跳跃」，圈满后松手就跳；集满 3 罐气泡水后按「扔鳄龟」或「豪华水枪」放技能。',
+  rotHint:'请把手机向左横过来拿（开着方向锁也能玩）。',
+  chipBoost:'<b>绿箭头</b> 加速带',chipRapids:'<b>白色急流</b> 水流更快',chipRocks:'<b>礁石</b> 撞上会减速',chipCans:'<b>气泡水罐</b> 集满 3 罐放技能',
+  rosterLabel:'全部 6 位选手',rosterHint:'（点头像改照片和名字）',bulk:'一次选多张照片',
+  hintTitle:'先换上你自己的头像吧！',hintBody:'点上面的「你」，从相册选一张照片。比赛里你的漂流圈上就是这张大头贴，朋友们的头像也能一起换。',hintGo:'选照片',hintNo:'知道了',
+  sound:'声音',music:'音乐：{s}',sfx:'音效：{s}',on:'开',off:'关',start:'开始比赛',lang:'语言',
+  raceOver:'比赛结束',placeN:'第 {n} 名',exit:'退出',again:'再来一局',
+  askTitle:'用你自己的照片当头像？',askBody:'比赛里你的漂流圈上会顶着这张大头贴。也可以给阿浪、小鱼他们换成朋友的照片。照片只存在你的手机里，不会上传。',askGo:'从相册选照片',askSkip:'先不用，直接开始',
+  edTitle:'编辑选手',cropAria:'头像裁剪区，拖动调整位置',edName:'名字',edPick:'从相册选照片',edZoom:'缩放',edTipDrag:'拖动照片，把脸放进圆圈里。',edTipPick:'先从相册选一张照片。',edTipBad:'这张照片打不开，换一张试试（JPG 或 PNG）。',
+  edReset:'恢复默认头像',edPrev:'‹ 上一位',edNext:'下一位 ›',edOk:'完成',edYou:'你自己（玩家）',edAI:'电脑对手',edCount:'第 {i} / {n} 位',slotAria:'编辑选手 {name}',
+  bulkDone:'已按顺序换好 {k} 位选手的头像{bad}。点头像可以再调整位置和改名字。',bulkBad:'，{b} 张打不开',cssEdit:'换',cssPhoto:'+ 照片',
+  boost:'加速！',waveYou:'被大浪拍中！',waveHit:'大浪拍中 {n} 人！',waveMiss:'大浪落空',noTarget:'附近没有对手',turtleAt:'扔出鳄龟 → {name}',turtleAtYou:'{name} 朝你扔了只鳄龟！',
+  gunAt:'豪华水枪 → {name}',gunAtYou:'{name} 掏出了豪华水枪！',scaredYou:'被 {name} 的鳄龟吓坏了！',scaredThem:'{name} 被鳄龟吓得乱晃！',flippedYou:'被 {name} 喷翻船了！',flippedThem:'把 {name} 喷翻了！',
+  unstuck:'脱困！',chargeFull:'蓄满再松手',splashYou:'被 {name} 的水花冲开了！',splashHit:'水花冲开了 {n} 人！',drift:'超级漂移加速！',rock:'撞礁石！',
+  skillReady:'技能就绪！',sodaN:'气泡水 {n}/{max}',champ:'冠军！',approx:'约 ',go:'出发！',
+  names:['你','阿浪','小鱼','石头','飞燕','老船长']}};
+window.LANG=(()=>{try{const l=localStorage.getItem('river-tube-lang');return l==='zh'?'zh':'en';}catch(_){return 'en';}})();
+window.t=(k,v)=>{const d=I18N[LANG]||I18N.en;let str=d[k]!==undefined?d[k]:(I18N.en[k]!==undefined?I18N.en[k]:k);
+  if(v&&typeof str==='string')str=str.replace(/\{(\w+)\}/g,(m,x)=>v[x]!==undefined?v[x]:m);return str;};
+window.ordinal=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
+window.langHooks=[];
+window.applyI18n=()=>{document.documentElement.lang=LANG==='zh'?'zh-CN':'en';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.dataset.i18n);});
+  document.querySelectorAll('[data-i18n-aria]').forEach(el=>{el.setAttribute('aria-label',t(el.dataset.i18nAria));});
+  const r=document.documentElement.style;r.setProperty('--lbl-edit',JSON.stringify(t('cssEdit')));r.setProperty('--lbl-photo',JSON.stringify(t('cssPhoto')));
+  document.querySelectorAll('.langsw button').forEach(b=>{const on=b.dataset.lang===LANG;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
+  langHooks.forEach(f=>{try{f();}catch(e){console.error(e);}});};
+window.setLang=l=>{LANG=l==='zh'?'zh':'en';try{localStorage.setItem('river-tube-lang',LANG);}catch(_){}applyI18n();};
+</script>
 <script>
 // ---------- loading screen controller ----------
 (() => {
@@ -342,16 +405,17 @@ body.compact .ld-info{padding-block:0 14px;gap:6px}body.compact .ld-bar{height:1
   function finish(){loader.classList.add('out');setTimeout(()=>{loader.hidden=true;},650);}
   function fail(msg){done=false;cancelAnimationFrame(raf);stageEl.textContent=msg;retry.hidden=false;retry.focus();}
   retry.addEventListener('click',()=>location.reload());
-  window.__loader={set,ready(){set(100,'准备出发！');done=true;},fail};
+  window.__loader={set,ready(){set(100,t('ready'));done=true;},fail};
   raf=requestAnimationFrame(tick);
   // load three.js (cdnjs, then jsDelivr as a backup), wait for fonts, then build the world
   const SRCS=['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js'];
-  set(38,'加载中…');
-  function load(i){const sc=document.createElement('script');sc.src=SRCS[i];sc.onload=afterThree;sc.onerror=()=>{if(i+1<SRCS.length)load(i+1);else fail('3D 引擎加载失败，请检查网络后重试');};document.head.appendChild(sc);}
-  function afterThree(){set(60,'加载中…');
+  applyI18n();document.querySelectorAll('.langsw button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+  set(38,t('loading'));
+  function load(i){const sc=document.createElement('script');sc.src=SRCS[i];sc.onload=afterThree;sc.onerror=()=>{if(i+1<SRCS.length)load(i+1);else fail(t('fail3d'));};document.head.appendChild(sc);}
+  function afterThree(){set(60,t('loading'));
     const fonts=document.fonts&&document.fonts.ready?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve();
-    fonts.then(()=>{set(82,'加载中…');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{try{window.__bootGame();}catch(e){console.error(e);fail('游戏启动失败：你的浏览器可能不支持 3D（WebGL），换个浏览器试试');}}));});}
+    fonts.then(()=>{set(82,t('loading'));
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{try{window.__bootGame();}catch(e){console.error(e);fail(t('failBoot'));}}));});}
   load(0);
 })();
 </script>
@@ -495,7 +559,7 @@ const pads=[];
 const CAN_COLORS=[0xff1f8f,0x00d8ff,0xa8ff00,0xffa000];
 const canTexs=[['#ff1f8f','#ffffff'],['#00d8ff','#ffffff'],['#a8ff00','#ffffff'],['#ffa000','#ffffff']].map(([a,b])=>canvasTex(128,128,(g,w,h)=>{
   g.fillStyle=a;g.fillRect(0,0,w,h);g.fillStyle=b;g.fillRect(0,h*0.62,w,h*0.38);g.fillStyle='rgba(255,255,255,.55)';for(let i=0;i<14;i++){g.beginPath();g.arc(Math.random()*w,h*0.1+Math.random()*h*0.5,2+Math.random()*5,0,7);g.fill();}
-  g.fillStyle='#fff';g.font='bold 30px system-ui,sans-serif';g.textAlign='center';g.fillText('气泡水',w/2,h*0.5);},false));
+  g.fillStyle='#fff';g.font='bold 30px system-ui,sans-serif';g.textAlign='center';g.fillText('SODA',w/2,h*0.5);},false));
 const canGeo=new THREE.CylinderGeometry(0.34,0.34,0.95,16);
 const canTop=new THREE.MeshStandardMaterial({color:0xd9e3e8,metalness:0.7,roughness:0.3});
 const canMats=canTexs.map((t,i)=>[new THREE.MeshStandardMaterial({map:t,metalness:0.2,roughness:0.3,emissive:CAN_COLORS[i],emissiveIntensity:0.55}),canTop,canTop]);
@@ -668,12 +732,12 @@ function makeSticker(r){const c=document.createElement('canvas');c.width=c.heigh
   g.restore();return c;}
 
 const ROSTER=[
-  {name:'你',outer:0xe3262e,inner:0x2f7cf6,vest:0xffd23f,css:'#2f7cf6',hair:'#3a2618',player:true},
-  {name:'阿浪',outer:0xe3262e,inner:0x17a3a3,vest:0xffd23f,css:'#17a3a3',hair:'#1d1d1d',skill:0.99},
-  {name:'小鱼',outer:0xe3262e,inner:0x22b573,vest:0xff7a1a,css:'#22b573',hair:'#5a3a22',skill:0.96},
-  {name:'石头',outer:0x9aa3ab,inner:0xe3262e,vest:0xffd23f,css:'#9aa3ab',hair:'#1d1d1d',skill:0.94},
-  {name:'飞燕',outer:0xe3262e,inner:0xb04fe0,vest:0xffd23f,css:'#b04fe0',hair:'#c98a3a',skill:0.97},
-  {name:'老船长',outer:0x2f7cf6,inner:0xe3262e,vest:0xff7a1a,css:'#e8445a',hair:'#d8d8d8',skill:0.92},
+  {name:'You',outer:0xe3262e,inner:0x2f7cf6,vest:0xffd23f,css:'#2f7cf6',hair:'#3a2618',player:true},
+  {name:'Ace',outer:0xe3262e,inner:0x17a3a3,vest:0xffd23f,css:'#17a3a3',hair:'#1d1d1d',skill:0.99},
+  {name:'Minnow',outer:0xe3262e,inner:0x22b573,vest:0xff7a1a,css:'#22b573',hair:'#5a3a22',skill:0.96},
+  {name:'Rocky',outer:0x9aa3ab,inner:0xe3262e,vest:0xffd23f,css:'#9aa3ab',hair:'#1d1d1d',skill:0.94},
+  {name:'Swift',outer:0xe3262e,inner:0xb04fe0,vest:0xffd23f,css:'#b04fe0',hair:'#c98a3a',skill:0.97},
+  {name:'Captain',outer:0x2f7cf6,inner:0xe3262e,vest:0xff7a1a,css:'#e8445a',hair:'#d8d8d8',skill:0.92},
 ];
 const racers=ROSTER.map((r,i)=>{const k=makeTube(r.outer,r.inner,r.vest);scene.add(k.group);
   const o={...r,idx:i,defName:r.name,isPlayer:!!r.player,skill:r.skill||1,mesh:k.group,paddle:k.paddle,head:k.head,seed:i*1.7,photo:null,photoData:null};
@@ -688,12 +752,13 @@ racers.slice().reverse().forEach(r=>{const d=document.createElement('div');d.cla
 const rosterEl=document.getElementById('roster');
 racers.forEach(r=>{const b=document.createElement('button');b.className='slot'+(r.isPlayer?' me':'');b.type='button';b.innerHTML='<img alt=""><span></span>';b.addEventListener('click',()=>openEditor(r));rosterEl.appendChild(b);r.slot=b;});
 function refreshLook(r){const c=makeSticker(r);if(r.headTex)r.headTex.dispose();r.headTex=new THREE.CanvasTexture(c);r.head.material.map=r.headTex;r.head.material.needsUpdate=true;
-  const url=c.toDataURL('image/png');r.stickerURL=url;r.dot.style.backgroundImage=`url(${url})`;r.slot.querySelector('img').src=url;r.slot.querySelector('span').textContent=r.name;r.slot.setAttribute('aria-label','编辑选手 '+r.name);
+  const url=c.toDataURL('image/png');r.stickerURL=url;r.dot.style.backgroundImage=`url(${url})`;r.slot.querySelector('img').src=url;r.slot.querySelector('span').textContent=r.name;r.slot.setAttribute('aria-label',t('slotAria',{name:r.name}));
   if(r.label&&r.label.userData.name!==r.name){const old=r.label;r.label=nameSprite(r.name,r.css);r.label.userData.name=r.name;r.mesh.remove(old);old.material.map.dispose();r.mesh.add(r.label);}}
 const STORE='river-tube-avatars-v1';
-function saveStore(){try{const o={};racers.forEach(r=>{o[r.idx]={name:r.name,photo:r.photoData};});localStorage.setItem(STORE,JSON.stringify(o));}catch(_){}}
+const isDefName=(n,i)=>I18N.en.names[i]===n||I18N.zh.names[i]===n;
+function saveStore(){try{const o={};racers.forEach(r=>{o[r.idx]={name:isDefName(r.name,r.idx)?null:r.name,photo:r.photoData};});localStorage.setItem(STORE,JSON.stringify(o));}catch(_){}}
 function loadStore(){let o={};try{o=JSON.parse(localStorage.getItem(STORE)||'{}')||{};}catch(_){}
-  racers.forEach(r=>{const e=o[r.idx];if(r.label)r.label.userData.name=r.name;if(e){if(e.name)r.name=e.name;if(e.photo){const im=new Image();im.onload=()=>{r.photo=im;refreshLook(r);};im.src=e.photo;r.photoData=e.photo;}}refreshLook(r);});}
+  racers.forEach(r=>{const e=o[r.idx];r.name=t('names')[r.idx];if(r.label)r.label.userData.name=r.name;if(e){if(e.name&&!isDefName(e.name,r.idx))r.name=e.name;if(e.photo){const im=new Image();im.onload=()=>{r.photo=im;refreshLook(r);};im.src=e.photo;r.photoData=e.photo;}}refreshLook(r);});}
 
 const ed={el:document.getElementById('editor'),c:document.getElementById('cropC'),name:document.getElementById('edName'),zoom:document.getElementById('edZoom'),file:document.getElementById('filePick'),r:null,img:null,ox:0,oy:0};
 const ectx=ed.c.getContext('2d');
@@ -702,12 +767,12 @@ function drawCrop(){const g=ectx;g.fillStyle='#0b2a33';g.fillRect(0,0,480,480);
   else{g.save();g.translate(40,40);g.scale(400/256,400/256);drawDefaultFace(g,ed.r);g.restore();}
   g.save();g.fillStyle='rgba(4,24,30,.72)';g.beginPath();g.rect(0,0,480,480);g.arc(240,240,200,0,7,true);g.fill('evenodd');g.restore();
   g.strokeStyle='#fff';g.lineWidth=14;g.beginPath();g.arc(240,240,207,0,7);g.stroke();}
-function openEditor(r){ed.r=r;ed.img=r.photo;ed.ox=ed.oy=0;ed.zoom.value=1;ed.name.value=r.name;document.getElementById('edTitle').textContent=r.isPlayer?'你自己（玩家）':'电脑对手';document.getElementById('edCount').textContent=`第 ${r.idx+1} / ${racers.length} 位`;
-  document.getElementById('edTip').textContent=r.photo?'拖动照片，把脸放进圆圈里。':'先从相册选一张照片。';drawCrop();ed.el.hidden=false;}
+function openEditor(r){ed.r=r;ed.img=r.photo;ed.ox=ed.oy=0;ed.zoom.value=1;ed.name.value=r.name;document.getElementById('edTitle').textContent=r.isPlayer?t('edYou'):t('edAI');document.getElementById('edCount').textContent=t('edCount',{i:r.idx+1,n:racers.length});
+  document.getElementById('edTip').textContent=r.photo?t('edTipDrag'):t('edTipPick');drawCrop();ed.el.hidden=false;}
 document.getElementById('edPick').addEventListener('click',()=>{ed.file.value='';ed.file.click();});
 ed.file.addEventListener('change',()=>{const f=ed.file.files&&ed.file.files[0];if(!f)return;const url=URL.createObjectURL(f);const im=new Image();
-  im.onload=()=>{ed.img=im;ed.ox=ed.oy=0;ed.zoom.value=1;document.getElementById('edTip').textContent='拖动照片，把脸放进圆圈里。';drawCrop();};
-  im.onerror=()=>{document.getElementById('edTip').textContent='这张照片打不开，换一张试试（JPG 或 PNG）。';};im.src=url;});
+  im.onload=()=>{ed.img=im;ed.ox=ed.oy=0;ed.zoom.value=1;document.getElementById('edTip').textContent=t('edTipDrag');drawCrop();};
+  im.onerror=()=>{document.getElementById('edTip').textContent=t('edTipBad');};im.src=url;});
 ed.zoom.addEventListener('input',drawCrop);
 ed.c.addEventListener('wheel',e=>{e.preventDefault();ed.zoom.value=clamp(Number(ed.zoom.value)*(e.deltaY<0?1.08:1/1.08),1,4);drawCrop();},{passive:false});
 {let drag=null;ed.c.addEventListener('pointerdown',e=>{if(!ed.img)return;drag={x:e.clientX,y:e.clientY};try{ed.c.setPointerCapture(e.pointerId)}catch(_){}});
@@ -717,7 +782,7 @@ ed.c.addEventListener('wheel',e=>{e.preventDefault();ed.zoom.value=clamp(Number(
 document.getElementById('edReset').addEventListener('click',()=>{ed.img=null;drawCrop();});
 function cropTo256(img,ox,oy,zoom){const out=document.createElement('canvas');out.width=out.height=256;const g=out.getContext('2d');const k=256/400;g.scale(k,k);g.translate(-40,-40);
   const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height,sc=400/Math.min(iw,ih)*zoom;g.drawImage(img,240+ox-iw*sc/2,240+oy-ih*sc/2,iw*sc,ih*sc);return out;}
-function commitEditor(){const r=ed.r;r.name=ed.name.value.trim().slice(0,6)||r.defName;
+function commitEditor(){const r=ed.r;r.name=ed.name.value.trim().slice(0,8)||t('names')[r.idx];
   if(ed.img){const out=cropTo256(ed.img,ed.ox,ed.oy,Number(ed.zoom.value));r.photoData=out.toDataURL('image/jpeg',0.88);r.photo=out;}else{r.photo=null;r.photoData=null;}
   refreshLook(r);saveStore();}
 document.getElementById('edOk').addEventListener('click',()=>{commitEditor();ed.el.hidden=true;document.getElementById('startBtn').focus();});
@@ -728,10 +793,13 @@ const bulkFile=document.getElementById('bulkFile'),bulkMsg=document.getElementBy
 document.getElementById('bulkPick').addEventListener('click',()=>{bulkFile.value='';bulkFile.click();});
 bulkFile.addEventListener('change',()=>{const files=[...(bulkFile.files||[])].slice(0,racers.length);if(!files.length)return;let done=0,bad=0;
   files.forEach((f,i)=>{const im=new Image();const fin=()=>{done++;if(done===files.length){saveStore();bulkMsg.hidden=false;
-      bulkMsg.textContent=`已按顺序换好 ${files.length-bad} 位选手的头像${bad?`，${bad} 张打不开`:''}。点头像可以再调整位置和改名字。`;}};
+      bulkMsg.textContent=t('bulkDone',{k:files.length-bad,bad:bad?t('bulkBad',{b:bad}):''});}};
     im.onload=()=>{const r=racers[i];const out=cropTo256(im,0,0,1);r.photo=out;r.photoData=out.toDataURL('image/jpeg',0.88);refreshLook(r);fin();};
     im.onerror=()=>{bad++;fin();};im.src=URL.createObjectURL(f);});});
 loadStore();
+langHooks.push(()=>{racers.forEach(r=>{if(isDefName(r.name,r.idx))r.name=t('names')[r.idx];refreshLook(r);});renderSoundUI();ui.jFull=undefined;
+  if(!document.getElementById('editor').hidden&&ed.r)openEditor(ed.r);
+  if(state==='results'){showResults();}});
 // ---- first-time avatar hints ----
 const HINT_KEY='river-tube-avhint-v1',ASK_KEY='river-tube-avask-v1';
 const flag=k=>{try{return localStorage.getItem(k)==='1';}catch(_){return false;}};
@@ -903,8 +971,8 @@ function audioTick(){const c=AU.ctx;if(!c)return;AU.final=state==='race'&&player
   AU.riverG.gain.setTargetAtTime((racing?0.07:0.035)+_sa.rf*0.16,c.currentTime,0.3);AU.riverLP.frequency.setTargetAtTime(450+_sa.rf*1400,c.currentTime,0.3);}
 const SPK_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
 const SPK_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
-function renderSoundUI(){document.getElementById('muteBtn').innerHTML=AU.muted?SPK_OFF:SPK_ON;document.getElementById('muteBtn').setAttribute('aria-label',AU.muted?'打开声音':'关闭声音');
-  document.getElementById('musicBtn').textContent='音乐：'+(AU.music?'开':'关');document.getElementById('sfxBtn').textContent='音效：'+(AU.sfx?'开':'关');}
+function renderSoundUI(){document.getElementById('muteBtn').innerHTML=AU.muted?SPK_OFF:SPK_ON;document.getElementById('muteBtn').setAttribute('aria-label',AU.muted?t('muteOff'):t('muteOn'));
+  document.getElementById('musicBtn').textContent=t('music',{s:t(AU.music?'on':'off')});document.getElementById('sfxBtn').textContent=t('sfx',{s:t(AU.sfx?'on':'off')});}
 document.getElementById('muteBtn').addEventListener('click',()=>{AU.muted=!AU.muted;applyVolumes();saveSound();renderSoundUI();});
 document.getElementById('musicBtn').addEventListener('click',()=>{AU.music=!AU.music;if(AU.music)AU.muted=false;applyVolumes();saveSound();renderSoundUI();});
 document.getElementById('sfxBtn').addEventListener('click',()=>{AU.sfx=!AU.sfx;if(AU.sfx)AU.muted=false;applyVolumes();saveSound();renderSoundUI();sfx('click');});
@@ -951,25 +1019,25 @@ function giveItem(b,place){const r=Math.random();const back=place/(racers.length
   if(r<0.2+back*0.35)b.item={id:'turbo3',n:3};else if(r<0.62)b.item={id:'turbo',n:1};else b.item={id:'wave',n:1};
   b.itemHold=0.6+Math.random()*2;}
 function useItem(b){if(!b.item)return;const it=b.item;
-  if(it.id==='turbo'||it.id==='turbo3'){b.boostT=Math.max(b.boostT,1.3);b.boostTier=2;if(b.isPlayer)say('加速！',0.6,true);it.n--;if(it.id==='turbo3'&&it.n>0)b.item={id:'turbo3',n:it.n};}
-  else if(it.id==='wave'){let hit=0;sfx('wave',b.isPlayer?null:b.mesh.position);for(const o of racers){if(o===b||o.finishTime!=null)continue;const du=o.u-b.u;if(du>0&&du<75){o.stunT=1.1;o.v*=0.4;o.spin=1;hit++;const s=toWorld(o.u,o.x,{});burst(s.wx,s.y+0.5,s.wz,40,0.9,0.97,1,7);if(o.isPlayer){say('被大浪拍中！',1.1,true);shake=0.5;}}}
-    if(b.isPlayer)say(hit?`大浪拍中 ${hit} 人！`:'大浪落空',1,true);it.n=0;}
+  if(it.id==='turbo'||it.id==='turbo3'){b.boostT=Math.max(b.boostT,1.3);b.boostTier=2;if(b.isPlayer)say(t('boost'),0.6,true);it.n--;if(it.id==='turbo3'&&it.n>0)b.item={id:'turbo3',n:it.n};}
+  else if(it.id==='wave'){let hit=0;sfx('wave',b.isPlayer?null:b.mesh.position);for(const o of racers){if(o===b||o.finishTime!=null)continue;const du=o.u-b.u;if(du>0&&du<75){o.stunT=1.1;o.v*=0.4;o.spin=1;hit++;const s=toWorld(o.u,o.x,{});burst(s.wx,s.y+0.5,s.wz,40,0.9,0.97,1,7);if(o.isPlayer){say(t('waveYou'),1.1,true);shake=0.5;}}}
+    if(b.isPlayer)say(hit?t('waveHit',{n:hit}):t('waveMiss'),1,true);it.n=0;}
   if(it.n<=0)b.item=null;}
 
 // ---------- skills (3 cans) ----------
-const SKILL_COST=3,SKILL_RANGE=70;
+const SKILL_COST=3,SKILL_RANGE=70;const T=(k,v)=>window.t(k,v);
 const flights=[];const swp={},swq={};
 function nearestTarget(b){let best=null,bd=1e9;toWorld(b.u,b.x,swp);
   for(const o of racers){if(o===b||o.finishTime!=null||o.capT>0)continue;toWorld(o.u,o.x,swq);const d=Math.hypot(swq.wx-swp.wx,swq.wz-swp.wz);if(d<bd){bd=d;best=o;}}
   return bd<=SKILL_RANGE?best:null;}
 function castSkill(b,kind){if(b.cans<SKILL_COST||b.capT>0)return false;const t=nearestTarget(b);
-  if(!t){if(b.isPlayer)say('附近没有对手',0.8,true);return false;}
+  if(!t){if(b.isPlayer)say(t('noTarget'),0.8,true);return false;}
   b.cans-=SKILL_COST;
   if(kind==='turtle'){const m=makeTurtle();m.position.copy(b.mesh.position).add(new THREE.Vector3(0,2.2,0));scene.add(m);
     flights.push({kind,from:b,to:t,mesh:m,t:0,dur:0.85,sx:m.position.x,sy:m.position.y,sz:m.position.z});sfx('throw',b.isPlayer?null:b.mesh.position);
-    if(b.isPlayer)say(`扔出鳄龟 → ${t.name}`,0.9,true);else if(t.isPlayer)say(`${b.name} 朝你扔了只鳄龟！`,0.9,true);}
+    if(b.isPlayer)say(T('turtleAt',{name:t.name}),0.9,true);else if(t.isPlayer)say(T('turtleAtYou',{name:b.name}),0.9,true);}
   else{if(!b.gun){b.gun=makeWaterGun();b.mesh.add(b.gun);}b.gun.visible=true;b.gunActive=true;b.gunAge=0;b.gunTarget=t;b.gunHit=false;b.gunPopped=false;b.gunPhase=0;sfx('inflate',b.isPlayer?null:b.mesh.position);
-    if(b.isPlayer)say(`豪华水枪 → ${t.name}`,0.9,true);else if(t.isPlayer)say(`${b.name} 掏出了豪华水枪！`,0.9,true);}
+    if(b.isPlayer)say(T('gunAt',{name:t.name}),0.9,true);else if(t.isPlayer)say(T('gunAtYou',{name:b.name}),0.9,true);}
   return true;}
 const fv=new THREE.Vector3(),fv2=new THREE.Vector3();
 function updateSkills(dt){
@@ -978,7 +1046,7 @@ function updateSkills(dt){
     if(f.t>=1){scene.remove(f.mesh);flights.splice(i,1);const t=f.to;burst(tp.x,tp.y+1,tp.z,30,0.9,0.97,1,6);
       sfx('splashBig',t.isPlayer?null:tp,0.8);if(t.capT>0)continue;t.scareT=2.6;sfx('scared',t.isPlayer?null:tp);t.v*=0.45;t.drift.on=false;t.boostT=0;
       if(t.turtle)t.mesh.remove(t.turtle);t.turtle=f.mesh;f.mesh.rotation.set(-0.3,0.4,0.1);f.mesh.position.set(0.55,0.85,-1.05);f.mesh.scale.setScalar(0.85);t.mesh.add(f.mesh);
-      if(t.isPlayer){say(`被 ${f.from.name} 的鳄龟吓坏了！`,1.2,true);shake=0.5;}else if(f.from.isPlayer)say(`${t.name} 被鳄龟吓得乱晃！`,1,true);}}
+      if(t.isPlayer){say(T('scaredYou',{name:f.from.name}),1.2,true);shake=0.5;}else if(f.from.isPlayer)say(T('scaredThem',{name:t.name}),1,true);}}
   for(const b of racers){
     if(b.scareT<=0&&b.turtle){const p=b.turtle.getWorldPosition(fv);b.mesh.remove(b.turtle);b.turtle=null;burst(p.x,p.y,p.z,14,0.9,0.97,1,4);}
     if(b.gunActive&&b.gun){b.gunAge+=dt;const a=b.gunAge,t=b.gunTarget,P=b.isPlayer?null:b.mesh.position;
@@ -996,7 +1064,7 @@ function updateSkills(dt){
       else if(b.jet)b.jet.visible=false;
       if(!b.gunHit&&a>=0.85&&t){b.gunHit=true;if(t.capT<=0){t.capT=2.6;sfx('capsize',t.isPlayer?null:t.mesh.position);t.scareT=0;t.drift.on=false;t.boostT=0;
           const tp=t.mesh.position;burst(tp.x,tp.y+1,tp.z,30,0.6,0.88,1,7);for(let k=0;k<40;k++)emitW(tp.x,tp.y+0.8,tp.z,(Math.random()-0.5)*9,3+Math.random()*6,(Math.random()-0.5)*9,0.8);
-          if(t.isPlayer){say(`被 ${b.name} 喷翻船了！`,1.4,true);shake=0.6;}else if(b.isPlayer)say(`把 ${t.name} 喷翻了！`,1,true);}}
+          if(t.isPlayer){say(T('flippedYou',{name:b.name}),1.4,true);shake=0.6;}else if(b.isPlayer)say(T('flippedThem',{name:t.name}),1,true);}}
       if(a>=1.6){b.gunActive=false;const gp=b.gun.getWorldPosition(gv);b.gun.visible=false;if(b.jet)b.jet.visible=false;
         for(let k=0;k<16;k++){const an=Math.random()*6.28;emit(gp.x,gp.y,gp.z,Math.cos(an)*2.5,1+Math.random()*2,Math.sin(an)*2.5,0.95,0.95,0.95,0.4);}sfx('poof',P);}}}}
 const jv0=new THREE.Vector3(),jv1=new THREE.Vector3();
@@ -1026,14 +1094,14 @@ function findClearX(u,prefer){const s={};sample(u,s);const lim=s.hw-2.5;let best
   for(let x=-lim;x<=lim;x+=0.5){let clear=99;for(const r of rocks){const du=Math.abs(r.u-u);if(du>10)continue;clear=Math.min(clear,Math.hypot(du,r.x-x)-r.r);}
     const score=Math.min(clear,6)*3-Math.abs(x-prefer)*0.3;if(score>bestScore){bestScore=score;best=x;}}return best;}
 function rescue(b){const u1=Math.min(b.u+9,L-20);b.hopU0=b.u;b.hopX0=b.x;b.hopU1=u1;b.hopX1=findClearX(u1,b.x);b.hopT=HOP;b.h=0;b.drift.on=false;b.stunT=0;
-  const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.6,s.wz,22,0.9,0.97,1,5);sfx('pop',b.isPlayer?null:b.mesh.position);if(b.isPlayer)say('脱困！',0.8,true);}
+  const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.6,s.wz,22,0.9,0.97,1,5);sfx('pop',b.isPlayer?null:b.mesh.position);if(b.isPlayer)say(t('unstuck'),0.8,true);}
 const HOP=0.6;
 const JUMP_CHARGE=0.8,JUMP_T=1.0,JUMP_H=4.6,JUMP_CD=1.0,SPLASH_R=7;
 const waveRings=[];const ringGeo2=new THREE.RingGeometry(0.8,1.2,40);ringGeo2.rotateX(-Math.PI/2);
 function jumpInput(b,held,dt){if(b.jumpCD>0)b.jumpCD-=dt;const can=b.jumpT<=0&&b.hopT<=0&&b.capT<=0&&b.jumpCD<=0;
   if(!can){b.jumpCharge=0;return;}
   if(held){const prev=b.jumpCharge;if(prev===0)sfx('charge');b.jumpCharge=Math.min(1,prev+dt/JUMP_CHARGE);if(prev<1&&b.jumpCharge>=1)sfx('tier2');}
-  else if(b.jumpCharge>0){if(b.jumpCharge>=1)startJump(b);else if(b.isPlayer)say('蓄满再松手',0.6,true);b.jumpCharge=0;}}
+  else if(b.jumpCharge>0){if(b.jumpCharge>=1)startJump(b);else if(b.isPlayer)say(t('chargeFull'),0.6,true);b.jumpCharge=0;}}
 function startJump(b){b.jumpT=JUMP_T;b.v=Math.max(b.v,15);b.drift.on=false;const s=toWorld(b.u,b.x,{});
   for(let k=0;k<24;k++){const an=Math.random()*6.28;emitW(s.wx,s.y+0.3,s.wz,Math.cos(an)*3,2+Math.random()*3,Math.sin(an)*3,0.6);}sfx('jump',b.isPlayer?null:b.mesh.position);}
 function land(b){const s=toWorld(b.u,b.x,{});b.jumpCD=JUMP_CD;
@@ -1043,8 +1111,8 @@ function land(b){const s=toWorld(b.u,b.x,{});b.jumpCD=JUMP_CD;
   sfx('splashBig',b.isPlayer?null:b.mesh.position);sfx('bump',b.isPlayer?null:b.mesh.position,0.8);if(b.isPlayer)shake=Math.max(shake,0.35);
   let hit=0;for(const o of racers){if(o===b||o.jumpT>0||o.hopT>0||o.finishTime!=null)continue;const du=o.u-b.u,dx=o.x-b.x,d=Math.hypot(du,dx);if(d>=SPLASH_R)continue;
     const f=1-d/SPLASH_R,nu=d>0.01?du/d:0,nx=d>0.01?dx/d:(Math.random()<0.5?-1:1);o.pu+=nu*f*16;o.px+=nx*f*16;o.scareT=Math.max(o.scareT,0.5);hit++;
-    if(o.isPlayer)say(`被 ${b.name} 的水花冲开了！`,0.9,true);}
-  if(b.isPlayer&&hit)say(`水花冲开了 ${hit} 人！`,0.9,true);}
+    if(o.isPlayer)say(t('splashYou',{name:b.name}),0.9,true);}
+  if(b.isPlayer&&hit)say(t('splashHit',{n:hit}),0.9,true);}
 function updateRings(dt){for(let i=waveRings.length-1;i>=0;i--){const r=waveRings[i];r.t+=dt;const k=r.t/0.6;const sc=1+k*(SPLASH_R-1);r.m.scale.set(sc,1,sc);r.m.material.opacity=0.8*(1-k);if(k>=1){scene.remove(r.m);r.m.material.dispose();waveRings.splice(i,1);}}}
 const EASE_T=10;function startEase(){return state==='race'?smooth(0,EASE_T,raceTime):state==='countdown'?0:1;}function curEase(){return lerp(0.4,1,startEase());}
 function physics(b,dt){
@@ -1065,7 +1133,7 @@ function physics(b,dt){
   const turnK=TURN*(0.35+0.65*Math.min(1,Math.abs(b.v)/12));
   // drift
   if(b.wantDrift&&!b.drift.on&&Math.abs(b.steer)>0.3&&b.v>10){b.drift.on=true;b.drift.dir=Math.sign(b.steer);b.drift.charge=0;}
-  if(b.drift.on&&(!b.wantDrift||b.v<6||b.stunT>0)){const c=b.drift.charge;if(c>2){b.boostT=Math.max(b.boostT,1.3);b.boostTier=2;if(b.isPlayer)say('超级漂移加速！',0.7,true);}else if(c>1){b.boostT=Math.max(b.boostT,0.7);b.boostTier=1;}b.drift.on=false;b.drift.charge=0;}
+  if(b.drift.on&&(!b.wantDrift||b.v<6||b.stunT>0)){const c=b.drift.charge;if(c>2){b.boostT=Math.max(b.boostT,1.3);b.boostTier=2;if(b.isPlayer)say(t('drift'),0.7,true);}else if(c>1){b.boostT=Math.max(b.boostT,0.7);b.boostTier=1;}b.drift.on=false;b.drift.charge=0;}
   if(b.drift.on){b.h+=(b.drift.dir*0.75+b.steer*0.55)*turnK*dt*ctrl;b.drift.charge+=dt*(0.8+0.5*Math.abs(b.steer));}
   else b.h+=b.steer*turnK*dt*ctrl;
   if(scared)b.h+=Math.sin(time*6.5+b.seed*3)*1.5*dt;
@@ -1089,13 +1157,13 @@ function physics(b,dt){
   // rocks
   if(!air)for(const r of rocks){const du=b.u-r.u;if(du>6||du<-6)continue;const dx=b.x-r.x;const d=Math.hypot(du,dx)||0.01,m=r.r+1.55;
     if(d<m){b.u=r.u+du/d*m;b.x=r.x+dx/d*m;if(b.v>5){const s=toWorld(b.u,b.x,{});burst(s.wx,s.y+0.5,s.wz,24,0.95,0.98,1,6);b.v*=0.35;b.stunT=0.55;sfx('rock',b.isPlayer?null:b.mesh.position);b.spin=0.6;b.drift.on=false;
-      if(b.isPlayer){shake=0.45;say('撞礁石！',0.7,true);}}b.h+=dx/d*0.5;}}
+      if(b.isPlayer){shake=0.45;say(t('rock'),0.7,true);}}b.h+=dx/d*0.5;}}
   // boxes
   for(const bx of boxes){if(!bx.active)continue;if(Math.abs(b.u-bx.u)<2.5&&Math.abs(b.x-bx.x)<2.5){bx.active=false;bx.mesh.visible=false;bx.t=5;
     burst(bx.mesh.position.x,bx.mesh.position.y,bx.mesh.position.z,20,1,0.8,0.3,4);if(b.isPlayer)sfx('item');if(!b.item)giveItem(b,b.place||0);}}
   // cans
   if(!air)for(const c of cans){if(!c.active)continue;if(Math.abs(b.u-c.u)<2.3&&Math.abs(b.x-c.x)<2.3){c.active=false;c.mesh.visible=c.halo.visible=c.glow.visible=false;c.t=7;
-    if(b.cans<SKILL_COST){b.cans++;if(b.isPlayer)sfx(b.cans>=SKILL_COST?'ready':'can');if(b.isPlayer)say(b.cans>=SKILL_COST?'技能就绪！':`气泡水 ${b.cans}/${SKILL_COST}`,0.6,true);if(b.cans>=SKILL_COST&&!b.isPlayer)b.skillHold=1+Math.random()*3;}
+    if(b.cans<SKILL_COST){b.cans++;if(b.isPlayer)sfx(b.cans>=SKILL_COST?'ready':'can');if(b.isPlayer)say(b.cans>=SKILL_COST?t('skillReady'):t('sodaN',{n:b.cans,max:SKILL_COST}),0.6,true);if(b.cans>=SKILL_COST&&!b.isPlayer)b.skillHold=1+Math.random()*3;}
     burst(c.mesh.position.x,c.mesh.position.y,c.mesh.position.z,12,0.8,0.95,1,3);}}
   // pads
   for(const p of pads){if(Math.abs(b.u-p.u)<4.4&&Math.abs(b.x-p.x)<2.5){if(b.boostT<0.9){b.boostT=0.9;b.boostTier=1;}}}
@@ -1167,12 +1235,12 @@ document.getElementById('startBtn').addEventListener('click',maybeStart);
 document.getElementById('againBtn').addEventListener('click',startRace);
 function exitToMenu(){sfx('click');msgT=0;ui.msg.classList.remove('show');resetRace();state='menu';result.hidden=true;hud.hidden=true;touchEl.hidden=true;menu.hidden=false;camInit=false;setMusic('menu');document.body.classList.remove('cine');setTimeout(()=>document.getElementById('startBtn').focus(),50);}
 document.getElementById('exitBtn').addEventListener('click',exitToMenu);
-function onPlayerFinish(){state='finished';resultT=3.5;const place=standings().indexOf(player)+1;setMusic('off');sfx(place===1?'win':'finish');say(place===1?'冠军！':`第 ${place} 名`,2.5);}
+function onPlayerFinish(){state='finished';resultT=3.5;const place=standings().indexOf(player)+1;setMusic('off');sfx(place===1?'win':'finish');say(place===1?t('champ'):t('placeN',{n:place,ord:ordinal(place)}),2.5);}
 function standings(){return racers.slice().sort((a,b)=>{if(a.finishTime!=null&&b.finishTime!=null)return a.finishTime-b.finishTime;if(a.finishTime!=null)return -1;if(b.finishTime!=null)return 1;return b.u-a.u;});}
 const fmt=t=>{const m=Math.floor(t/60),s=t-m*60;return`${m}:${s<10?'0':''}${s.toFixed(2)}`;};
 function showResults(){
-  const st=standings();const rows=st.map((r,i)=>{const t=r.finishTime!=null?r.finishTime:raceTime+(uF-r.u)/26;return`<tr class="${r.isPlayer?'me':''}"><td>${i+1}</td><td><span class="rname"><img class="rav" src="${r.stickerURL||''}" alt="">${r.name}</span></td><td>${r.finishTime!=null?'':'约 '}${fmt(t)}</td></tr>`;}).join('');
-  document.getElementById('resTable').innerHTML=rows;document.getElementById('placeTxt').textContent=`第 ${st.indexOf(player)+1} 名`;
+  const st=standings();const rows=st.map((r,i)=>{const t=r.finishTime!=null?r.finishTime:raceTime+(uF-r.u)/26;return`<tr class="${r.isPlayer?'me':''}"><td>${i+1}</td><td><span class="rname"><img class="rav" src="${r.stickerURL||''}" alt="">${r.name}</span></td><td>${r.finishTime!=null?'':window.t('approx')}${fmt(t)}</td></tr>`;}).join('');
+  document.getElementById('resTable').innerHTML=rows;{const n=st.indexOf(player)+1;document.getElementById('placeTxt').textContent=t('placeN',{n,ord:ordinal(n)});}
   result.hidden=false;touchEl.hidden=true;state='results';setMusic('menu');msgT=0;ui.msg.classList.remove('show');setTimeout(()=>document.getElementById('againBtn').focus(),50);}
 
 // ---------- camera ----------
@@ -1219,7 +1287,7 @@ function frame(now){
   for(const r of rocks){const k=1+Math.sin(time*4+r.u)*0.12;r.ring.scale.set(r.base*k,1,r.base*k);}
 
   if(state==='countdown'){countT-=dt;const n=Math.ceil(countT-0.6);
-    if(countT>0.6){if(ui.msg.textContent!==String(n)){say(String(n),1);if(countT<3.05)sfx('beep');}}else{say('出发！',0.8);state='race';sfx('go');setMusic('race');}}
+    if(countT>0.6){if(ui.msg.textContent!==String(n)){say(String(n),1);if(countT<3.05)sfx('beep');}}else{say(t('go'),0.8);state='race';sfx('go');setMusic('race');}}
   if(state==='race'||state==='finished'||state==='results'){
     raceTime+=state==='race'?dt:0;if(state!=='race')raceTime+=dt;
     // player input
@@ -1252,7 +1320,7 @@ function frame(now){
     sample(player.u,sv);ui.spd.innerHTML=`${Math.round(Math.max(0,player.v*Math.cos(player.h)+sv.cur)*1.25)}<small> km/h</small>`;
     ui.time.textContent=fmt(raceTime);
     if(player.cans!==ui.lastCans){ui.lastCans=player.cans;ui.canPips.forEach((el,i)=>el.classList.toggle('on',i<player.cans));const rd=player.cans>=SKILL_COST;for(const el of ui.skBtns)el.classList.toggle('ready',rd);}
-    {const jc=player.jumpCharge||0;ui.jBtn.style.setProperty('--c',jc.toFixed(3));ui.jBtn.classList.toggle('full',jc>=1);const full=jc>=1;if(ui.jFull!==full){ui.jFull=full;ui.jBtn.innerHTML=full?'松手<br>跳！':'蓄力<br>跳跃';}ui.jBar.style.width=(jc*100)+'%';ui.jBar.style.background=jc>=1?'#ff7a1a':'#3fd0ff';}
+    {const jc=player.jumpCharge||0;ui.jBtn.style.setProperty('--c',jc.toFixed(3));ui.jBtn.classList.toggle('full',jc>=1);const full=jc>=1;if(ui.jFull!==full){ui.jFull=full;ui.jBtn.innerHTML=full?t('jumpGo'):t('jump');}ui.jBar.style.width=(jc*100)+'%';ui.jBar.style.background=jc>=1?'#ff7a1a':'#3fd0ff';}
     if(player.boostT>0&&!ui.wasBoost)sfx('boost');ui.wasBoost=player.boostT>0;
     
     for(const r of racers)r.dot.style.left=clamp((r.u-uStart)/(uF-uStart),0,1)*100+'%';
